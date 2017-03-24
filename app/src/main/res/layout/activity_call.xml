@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_call"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    tools:context="com.example.guan.webrtc_android_8.activity.CallActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottom_layout">
+
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/local_renderer"
+            android:layout_width="20dp"
+            android:layout_height="40dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true" />
+
+
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/remote_renderer_1"
+            android:layout_width="20dp"
+            android:layout_height="40dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true" />
+
+
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/remote_renderer_2"
+            android:layout_width="20dp"
+            android:layout_height="40dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true" />
+
+
+        <org.webrtc.SurfaceViewRenderer
+            android:id="@+id/remote_renderer_3"
+            android:layout_width="20dp"
+            android:layout_height="40dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true" />
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/bottom_layout"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:gravity="bottom">
+
+        <TextView
+            android:id="@+id/RoomID_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:layout_toLeftOf="@+id/Cancel_btn"
+            android:gravity="right|center_vertical"
+            android:layout_marginRight="30dp"
+            android:text="123"
+            android:textColor="@color/white"
+            android:textSize="30dp" />
+
+
+        <Button
+            android:id="@+id/Cancel_btn"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/disconnect" />
+
+        <Button
+            android:id="@+id/recover_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toRightOf="@+id/Cancel_btn"
+            android:background="@drawable/ic_action_return_from_full_screen"
+            android:layout_marginLeft="30dp"/>
+
+
+    </RelativeLayout>
+
+
+</RelativeLayout>
