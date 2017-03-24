@@ -16,6 +16,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.concurrent.ExecutionException;
 
 import static com.example.guan.webrtc_android_8.common.Helpers.requestTurnServers;
 
@@ -103,12 +104,11 @@ public class JsonHelper {
             if (result.equals("ROOM_FULL")) {
                 response = roomJson.getString("params");
                 roomJson = new JSONObject(response);
-                String backup = roomJson.getString("backup");
+                //String backup = roomJson.getString("backup");
 
                 Log.e(TAG, "ROOM_FULL");
                 AppRTC_Common.SignalingParameters params = new AppRTC_Common.SignalingParameters(result,
-                        null, false, null, null,
-                        null, null, null, null, null);
+                        null, false, null, null, null, null, null, null, null);
 
                 return params;
 
@@ -119,45 +119,13 @@ public class JsonHelper {
                 String clientId = roomJson.getString("client_id");
                 String wssUrl = roomJson.getString("wss_url");
                 String wssPostUrl = roomJson.getString("wss_post_url");
+                String roomSize = roomJson.getString("room_size");
                 boolean initiator = (roomJson.getBoolean("is_initiator"));
-                String instanceId = (String) roomJson.get("instanceID");
+                //String remoteInstanceId = (String) roomJson.get("instanceID");
 
-
-                if (!initiator) {
-                    iceCandidates = new LinkedList<IceCandidate>();
-                    String messagesString = roomJson.getString("messages");
-
-
-                    JSONArray messages = new JSONArray(messagesString);
-                    Log.e(TAG,"message.length="+messages.length()+"roomJson Message:"+messagesString);
-
-                    for (int i = 0; i < messages.length(); ++i) {
-                        String messageString = messages.getString(i);
-                        JSONObject message = new JSONObject(messageString);
-                        String messageType = message.getString("type");
-                        Log.d(TAG, "GAE->C #" + i + " : " + messageString);
-                        //Log.e(TAG,"Message type : "+messageType);
-                        if (messageType.equals("offer")) {
-
-                            Log.e(TAG, "收到sdp offer\t");
-                            offerSdp = new SessionDescription(
-                                    SessionDescription.Type.fromCanonicalForm(messageType), message.getString("sdp"));
-
-                        } else if (messageType.equals("candidate")) {
-
-                            Log.e(TAG, "收到candidate\t" + message.getString("candidate"));
-                            IceCandidate candidate = new IceCandidate(
-                                    message.getString("id"), message.getInt("label"), message.getString("candidate"));
-                            iceCandidates.add(candidate);
-
-                        } else {
-                            Log.e(TAG, "Unknown message: " + messageString);
-                        }
-                    }
-                }
-
-                Log.d(TAG, "RoomId: " + roomId + ". ClientId: " + clientId + "\tinstanceId: " + instanceId);
+                Log.d(TAG, "RoomId: " + roomId + ". ClientId: " + clientId );
                 Log.d(TAG, "Initiator: " + initiator);
+                Log.d(TAG, "roomSize: " + roomSize);
                 Log.d(TAG, "WSS url: " + wssUrl);
                 Log.d(TAG, "WSS POST url: " + wssPostUrl);
 
@@ -177,7 +145,7 @@ public class JsonHelper {
                 }
                 // Request TURN servers.
                 if (!isTurnPresent) {
-                    Log.e(TAG,"======requestTurnServers=========");
+                    Log.e(TAG, "======requestTurnServers=========");
                     LinkedList<PeerConnection.IceServer> turnServers =
                             requestTurnServers(roomJson.getString("ice_server_url"));
                     for (PeerConnection.IceServer turnServer : turnServers) {
@@ -188,7 +156,7 @@ public class JsonHelper {
                 }
 
                 AppRTC_Common.SignalingParameters params = new AppRTC_Common.SignalingParameters(result,
-                        iceServers, initiator, clientId, instanceId,
+                        iceServers, initiator, clientId, roomSize,
                         wssUrl, wssPostUrl, offerSdp, iceCandidates, roomId);
 
                 return params;
@@ -209,6 +177,64 @@ public class JsonHelper {
         }
     }
 
+    public static AppRTC_Common.MessageParameters messageHttpResponseParameters(String response) {
+
+        try {
+            LinkedList<IceCandidate> iceCandidates = new LinkedList<IceCandidate>();
+            SessionDescription offerSdp = null;
+            JSONObject roomJson = new JSONObject(response);
+
+            Log.d(TAG, "MessageParameters: " + roomJson.toString());
+
+            String result = roomJson.getString("result");
+            if (!result.equals("SUCCESS")) {
+                Log.e(TAG, "MessageParameters获取失败");
+                return null;
+            }
+
+
+            String roomId = roomJson.getString("room_id");
+            String clientId = roomJson.getString("client_id");
+            String remoteInstanceId = (String) roomJson.get("instance_id");
+            String messagesString = roomJson.getString("messages");
+
+            JSONArray messages = new JSONArray(messagesString);
+            Log.e(TAG, "message.length = " + messages.length() + "\troomJson Message : " + messagesString);
+
+            for (int i = 0; i < messages.length(); ++i) {
+                String messageString = messages.getString(i);
+                JSONObject message = new JSONObject(messageString);
+                String messageType = message.getString("type");
+                Log.d(TAG, "GAE->C #" + i + " : " + messageString);
+                //Log.e(TAG,"Message type : "+messageType);
+                if (messageType.equals("offer")) {
+
+                    Log.e(TAG, "收到sdp offer\t");
+                    offerSdp = new SessionDescription(
+                            SessionDescription.Type.fromCanonicalForm(messageType), message.getString("sdp"));
+
+                } else if (messageType.equals("candidate")) {
+
+                    Log.e(TAG, "收到candidate\t" + message.getString("candidate"));
+                    IceCandidate candidate = new IceCandidate(
+                            message.getString("id"), message.getInt("label"), message.getString("candidate"));
+                    iceCandidates.add(candidate);
+
+                } else {
+                    Log.e(TAG, "Unknown message: " + messageString);
+                }
+            }
+
+            return new AppRTC_Common.MessageParameters(roomId, clientId, remoteInstanceId, offerSdp, iceCandidates);
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
     // Return the list of ICE servers described by a WebRTCPeerConnection
     // configuration string.
     private static LinkedList<PeerConnection.IceServer> iceServersFromPCConfigJSON(String pcConfig)
@@ -224,60 +250,6 @@ public class JsonHelper {
         }
         return ret;
     }
-//
-//    /**
-//     * 注意：获取TurnServer的时候也用到了"https://appr.tc"。到时候要根据实际情况修改
-//     *
-//     * @param url
-//     * @return
-//     * @throws IOException
-//     * @throws JSONException
-//     */
-//    // Requests & returns a TURN ICE Server based on a request URL.  Must be run
-//    // off the main thread!
-//    private static LinkedList<PeerConnection.IceServer> requestTurnServers(String url)
-//            throws IOException, JSONException {
-//
-//        //这句话仅仅为了测试
-//        url = AppRTC_Common.turnServer_URL;
-//
-//
-//        LinkedList<PeerConnection.IceServer> turnServers = new LinkedList<PeerConnection.IceServer>();
-//        Log.d(TAG, "Request TURN from: " + url);
-//        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-//        connection.setDoOutput(true);
-//        connection.setRequestProperty("REFERER", AppRTC_Common.WebRTC_URL);
-//        connection.setConnectTimeout(TURN_HTTP_TIMEOUT_MS);
-//        connection.setReadTimeout(TURN_HTTP_TIMEOUT_MS);
-//        int responseCode = connection.getResponseCode();
-//        if (responseCode != 200) {
-//            throw new IOException("Non-200 response when requesting TURN server from " + url + " : "
-//                    + connection.getHeaderField(null));
-//        }
-//        InputStream responseStream = connection.getInputStream();
-//        String response = drainStream(responseStream);
-//        connection.disconnect();
-//        Log.d(TAG, "TURN response: " + response);
-//        JSONObject responseJSON = new JSONObject(response);
-//        JSONArray iceServers = responseJSON.getJSONArray("iceServers");
-//        for (int i = 0; i < iceServers.length(); ++i) {
-//            JSONObject server = iceServers.getJSONObject(i);
-//            JSONArray turnUrls = server.getJSONArray("urls");
-//            String username = server.has("username") ? server.getString("username") : "";
-//            String credential = server.has("credential") ? server.getString("credential") : "";
-//            for (int j = 0; j < turnUrls.length(); j++) {
-//                String turnUrl = turnUrls.getString(j);
-//                turnServers.add(new PeerConnection.IceServer(turnUrl, username, credential));
-//            }
-//        }
-//        return turnServers;
-//    }
-//
-//    // Return the contents of an InputStream as a String.
-//    private static String drainStream(InputStream in) {
-//        Scanner s = new Scanner(in).useDelimiter("\\A");
-//        return s.hasNext() ? s.next() : "";
-//    }
 
 
 }

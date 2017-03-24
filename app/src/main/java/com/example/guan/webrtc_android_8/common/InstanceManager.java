@@ -2,8 +2,10 @@ package com.example.guan.webrtc_android_8.common;
 
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.guan.webrtc_android_8.activity.CallActivity;
+import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,6 +22,7 @@ import static com.example.guan.webrtc_android_8.activity.CallActivity.reportErro
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.AUDIO_CODEC_ISAC;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_LEAVE;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_MESSAGE;
+import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_QUERY;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.preferredVideoCodec;
 import static com.example.guan.webrtc_android_8.common.Helpers.preferCodec;
 import static com.example.guan.webrtc_android_8.common.Helpers.sendPostMessage;
@@ -30,17 +33,17 @@ import static com.example.guan.webrtc_android_8.common.JsonHelper.toJsonCandidat
  * Created by guan on 3/18/17.
  */
 
-public class PeerManager {
+public class InstanceManager {
 
     private String localInstanceId;
-    //private String remoteInstanceId;//设置到了SignalingParameters中
+    //private String remoteInstanceId;//设置到了MessageParameters中
 
-    private String roomId;
     private String messageUrl;
     private String leaveUrl;
+    private String queryUrl;
     private AppRTC_Common.RoomState roomState;
-    private boolean isInitiator;
     private AppRTC_Common.SignalingParameters sigParms;
+    private AppRTC_Common.MessageParameters messageParameters;
     private LinkedList<IceCandidate> queuedRemoteCandidates = new LinkedList<>();
 
     private LinkedList<IceCandidate> localQueuedRemoteCandidates_backup = new LinkedList<>();
@@ -56,28 +59,34 @@ public class PeerManager {
     private SurfaceViewRenderer remoteRenderer;
     private MediaStream mediaStream;
 
-    AppRTC_Common.ICall iCall;
+    private boolean peerInitiator;
+
+    //AppRTC_Common.ICall iCall;
 
     private Handler handler;
 
-    private String TAG = AppRTC_Common.TAG_COMM + "PeerManager";
+    private String TAG = AppRTC_Common.TAG_COMM + "InstanceManager";
 
 
-    public PeerManager(AppRTC_Common.RoomConnectionParameters connectionParameters,
-                       AppRTC_Common.SignalingParameters sigParms,
-                       String localInstanceId,
-                       AppRTC_Common.ICall iCall,
-                       Handler handler) {
-        this.roomId = sigParms.roomId;
-        this.isInitiator = sigParms.initiator;
+    public InstanceManager(AppRTC_Common.RoomConnectionParameters connectionParameters,
+                           AppRTC_Common.SignalingParameters sigParms,
+                           String localInstanceId,
+                           //AppRTC_Common.ICall iCall,
+                           Handler handler) {
+
+
         this.messageUrl = connectionParameters.roomUrl + "/" + ROOM_MESSAGE + "/" + connectionParameters.roomId
                 + "/" + sigParms.clientId + "/" + localInstanceId;
         this.leaveUrl = connectionParameters.roomUrl + "/" + ROOM_LEAVE + "/" + connectionParameters.roomId + "/"
                 + sigParms.clientId + "/" + localInstanceId;
+        this.queryUrl = connectionParameters.roomUrl + "/" + ROOM_QUERY + "/" + connectionParameters.roomId + "/"
+                + sigParms.clientId + "/" + localInstanceId;
+
+
         this.roomState = AppRTC_Common.RoomState.CONNECTED;
 
         this.sigParms = sigParms;
-        this.iCall = iCall;
+        //this.iCall = iCall;
         this.handler = handler;
         this.localInstanceId = localInstanceId;
 
@@ -89,6 +98,7 @@ public class PeerManager {
          */
         Log.d(TAG, "Message URL: " + this.messageUrl);
         Log.d(TAG, "Leave URL: " + this.leaveUrl);
+        Log.d(TAG, "Query URL: " + this.queryUrl);
 
     }
 
@@ -178,28 +188,21 @@ public class PeerManager {
         this.mediaStream = mediaStream;
     }
 
-    //===============================
+    public boolean isPeerInitiator() {
+        return peerInitiator;
+    }
+
+    public void setPeerInitiator(boolean peerInitiator) {
+        this.peerInitiator = peerInitiator;
+    }
+
+//===============================
 
 
     public String getLocalInstanceId() {
         return localInstanceId;
     }
 
-    public String getRoomId() {
-        return roomId;
-    }
-
-    public String getMessageUrl() {
-        return messageUrl;
-    }
-
-    public String getLeaveUrl() {
-        return leaveUrl;
-    }
-
-    public boolean isInitiator() {
-        return isInitiator;
-    }
 
     public AppRTC_Common.SignalingParameters getSigParms() {
         return sigParms;
@@ -209,13 +212,61 @@ public class PeerManager {
         return localQueuedRemoteCandidates_backup;
     }
 
+    public void setRemoteInstanceId(String remoteInstanceId) {
+        messageParameters.remoteInstanceId = remoteInstanceId;
+    }
 
-//=====================================================
+
+
+    //=====================================================
 
     /**
      * 以下是回调方法
      */
     //=====================================================
+    public void gainMessage() {
+        AsyncHttpURLConnection httpURLConnection = new AsyncHttpURLConnection("POST", queryUrl,
+                "", new AsyncHttpURLConnection.AsyncHttpEvents() {
+            @Override
+            public void onHttpError(String errorMessage) {
+                Log.e(TAG, "获取offer/candidate失败: " + errorMessage);
+                //Toast.makeText( , "获取offer/candidate失败", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onHttpComplete(String response) {
+
+                messageParameters = JsonHelper.messageHttpResponseParameters(response);
+                if (messageParameters != null) {
+
+                    if (messageParameters.offerSdp != null) {
+                        //relay offer SDP
+                        Log.e(TAG, "sigParams.offerSdp != null =====设置remote SDP====");
+                        SessionDescription sdp = new SessionDescription(messageParameters.offerSdp.type
+                                , messageParameters.offerSdp.description);
+                        setRemoteDescription(sdp);
+                    }
+
+
+                    if (messageParameters.iceCandidates != null) {
+                        // Add remote ICE candidates from room.
+                        Log.e(TAG, "设置remote iceCandidates");
+                        LinkedList<IceCandidate> queuedRemoteCandidates = getQueuedRemoteCandidates();
+                        for (IceCandidate iceCandidate : messageParameters.iceCandidates) {
+                            if (queuedRemoteCandidates != null) {
+                                queuedRemoteCandidates.add(iceCandidate);
+                            } else {
+                                getPeerConnection().addIceCandidate(iceCandidate);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        httpURLConnection.send();
+
+    }
 
     /**
      * 断开链接
@@ -225,13 +276,13 @@ public class PeerManager {
 
         //disconnectRoomForInstance();
 
-        Log.e(TAG, "Closing room: " + roomId +"\tCloseing instance: "+localInstanceId+ "\tRoom state: " + roomState);
+        Log.e(TAG, "Closing room: " + sigParms.roomId + "\tCloseing instance: " + localInstanceId + "\tRoom state: " + roomState);
         if (roomState == AppRTC_Common.RoomState.CONNECTED) {
             //和房间服务器断开链接
             sendPostMessage(AppRTC_Common.MessageType.LEAVE,
                     leaveUrl,
                     null,
-                    roomId);
+                    sigParms.roomId);
         }
 
         Log.e(TAG, "Closing peer connection.");
@@ -263,16 +314,12 @@ public class PeerManager {
 
     }
 
-    private void disconnectRoomForInstance() {
-
-    }
-
     private void WebSocketSendBye() {
 
-        Log.e(TAG,"======WebSocketSendBye======");
+        Log.e(TAG, "======WebSocketSendBye======");
         JSONObject json = new JSONObject();
         jsonPut(json, "type", "bye");
-        jsonPut(json, "receiverId", sigParms.remoteInstanceId);
+        jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
         jsonPut(json, "senderId", localInstanceId);
         Log.e(TAG, "WebSocket Send Bye: " + json.toString());
         wsClient.send(json.toString());
@@ -282,7 +329,7 @@ public class PeerManager {
     // Send Ice candidate to the other participant.
     public void sendLocalIceCandidate(final IceCandidate candidate) {
 
-        Log.e(TAG,"send Local IceCandidate");
+        Log.e(TAG, "send Local IceCandidate");
 
         JSONObject json = new JSONObject();
 
@@ -292,7 +339,7 @@ public class PeerManager {
         jsonPut(json, "candidate", candidate.sdp);
 
 
-        if (isInitiator) {
+        if (peerInitiator) {
             // Call initiator sends ice candidates to GAE server.
             if (roomState != AppRTC_Common.RoomState.CONNECTED) {
                 Log.e(TAG, "Sending ICE candidate in non connected state.");
@@ -301,11 +348,11 @@ public class PeerManager {
             sendPostMessage(AppRTC_Common.MessageType.MESSAGE,
                     messageUrl,
                     json.toString(),
-                    roomId);
+                    sigParms.roomId);
 
         } else {
             // Call receiver sends ice candidates to websocket server.
-            jsonPut(json, "receiverId", sigParms.remoteInstanceId);
+            jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
             jsonPut(json, "senderId", localInstanceId);
             wsClient.send(json.toString());
         }
@@ -315,7 +362,7 @@ public class PeerManager {
     // Send removed Ice candidates to the other participant.
     public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
 
-        Log.e(TAG,"send Local IceCandidate Removals");
+        Log.e(TAG, "send Local IceCandidate Removals");
         JSONObject json = new JSONObject();
         jsonPut(json, "type", "remove-candidates");
         JSONArray jsonArray = new JSONArray();
@@ -328,7 +375,7 @@ public class PeerManager {
         jsonPut(json, "candidates", jsonArray);
         //jsonPut(json, "instanceId", sigParms.remoteInstanceId);
 
-        if (isInitiator) {
+        if (peerInitiator) {
             // Call initiator sends ice candidates to GAE server.
             if (roomState != AppRTC_Common.RoomState.CONNECTED) {
                 Log.e(TAG, "Sending ICE candidate removals in non connected state.");
@@ -337,11 +384,11 @@ public class PeerManager {
             sendPostMessage(AppRTC_Common.MessageType.MESSAGE,
                     messageUrl,
                     json.toString(),
-                    roomId);
+                    sigParms.roomId);
 
         } else {
             // Call receiver sends ice candidates to websocket server.
-            jsonPut(json, "receiverId", sigParms.remoteInstanceId);
+            jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
             jsonPut(json, "senderId", localInstanceId);
             wsClient.send(json.toString());
         }
@@ -395,7 +442,7 @@ public class PeerManager {
 
     public void setRemoteDescription(final SessionDescription sdp) {
 
-        Log.e(TAG, "localInstanceId:"+localInstanceId+"remoteInstanceId:"+sigParms.remoteInstanceId+
+        Log.e(TAG, "localInstanceId:" + localInstanceId + "remoteInstanceId:" + messageParameters.remoteInstanceId +
                 "===setRemoteDescription===");
         if (peerConnection == null) {
             return;
@@ -420,10 +467,9 @@ public class PeerManager {
     public void sendOfferSdp(final SessionDescription sdp) {
 
         if (roomState != AppRTC_Common.RoomState.CONNECTED) {
-            reportError(roomId, "Sending offer SDP in non connected state.");
+            reportError(sigParms.roomId, "Sending offer SDP in non connected state.");
             return;
         }
-
 
 
         JSONObject json = new JSONObject();
@@ -438,7 +484,7 @@ public class PeerManager {
         sendPostMessage(AppRTC_Common.MessageType.MESSAGE,
                 messageUrl,
                 json.toString(),
-                roomId);
+                sigParms.roomId);
     }
 
     /**
@@ -455,7 +501,7 @@ public class PeerManager {
         JSONObject json = new JSONObject();
         jsonPut(json, "sdp", sdp.description);
         jsonPut(json, "type", "answer");
-        jsonPut(json, "receiverId", sigParms.remoteInstanceId);
+        jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
         jsonPut(json, "senderId", localInstanceId);
         Log.e(TAG, "send AnswerSdp: " + json.toString());
 
@@ -471,7 +517,7 @@ public class PeerManager {
 
     //====================================================
     public void resendLocalSdp() {
-        if (isInitiator()) {
+        if (peerInitiator) {
             sendOfferSdp(localSdp_backup);
         } else {
             sendAnswerSdp(localSdp_backup);
@@ -479,7 +525,7 @@ public class PeerManager {
     }
 
     public void resendLocalIceCandidate() {
-        Log.e(TAG,"localQueuedRemoteCandidates_backup.size: "+localQueuedRemoteCandidates_backup.size());
+        Log.e(TAG, "localQueuedRemoteCandidates_backup.size: " + localQueuedRemoteCandidates_backup.size());
         for (IceCandidate candidate : localQueuedRemoteCandidates_backup) {
             sendLocalIceCandidate(candidate);
         }

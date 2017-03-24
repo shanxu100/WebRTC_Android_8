@@ -41,7 +41,9 @@ public class AppRTC_Common {
     public static final String ROOM_JOIN = "join";
     public static final String ROOM_MESSAGE = "message";
     public static final String ROOM_LEAVE = "leave";
-    public static final String ROOM_BACKUP = "backup";
+    //public static final String ROOM_BACKUP = "backup";
+    public static final String ROOM_QUERY = "query";
+
 
     public static final String VIDEO_CODEC_VP8 = "VP8";
     public static final String VIDEO_CODEC_VP9 = "VP9";
@@ -99,9 +101,9 @@ public class AppRTC_Common {
     public static class SignalingParameters {
         public final String result;
         public final List<PeerConnection.IceServer> iceServers;
-        public final boolean initiator;
+        //public final boolean initiator;
         public final String clientId;
-        public String remoteInstanceId;
+        public String roomSize;
         public final String wssUrl;
         public final String wssPostUrl;
         public final SessionDescription offerSdp;
@@ -109,13 +111,13 @@ public class AppRTC_Common {
         public final String roomId;
 
         public SignalingParameters(String result, List<PeerConnection.IceServer> iceServers, boolean initiator,
-                                   String clientId, String remoteInstanceId, String wssUrl, String wssPostUrl, SessionDescription offerSdp,
+                                   String clientId, String roomSize, String wssUrl, String wssPostUrl, SessionDescription offerSdp,
                                    List<IceCandidate> iceCandidates, String roomId) {
             this.result = result;
             this.iceServers = iceServers;
-            this.initiator = initiator;
+            //this.initiator = initiator;
             this.clientId = clientId;
-            this.remoteInstanceId = remoteInstanceId;
+            this.roomSize = roomSize;
             this.wssUrl = wssUrl;
             this.wssPostUrl = wssPostUrl;
             this.offerSdp = offerSdp;
@@ -128,8 +130,9 @@ public class AppRTC_Common {
         public String toString() {
             return "SignalingParameters{" +
                     "iceServers=" + iceServers.get(0) +
-                    ", initiator=" + initiator +
+                    //", initiator=" + initiator +
                     ", clientId='" + clientId + '\'' +
+                    ", roomSize='" + roomSize + '\'' +
                     ", wssUrl='" + wssUrl + '\'' +
                     ", wssPostUrl='" + wssPostUrl + '\'' +
                     ", offerSdp=" + offerSdp +
@@ -139,6 +142,36 @@ public class AppRTC_Common {
         }
     }
 
+    public static class MessageParameters {
+        public final String roomId;
+        public final String clientId;
+        public String remoteInstanceId;
+        public final SessionDescription offerSdp;
+        public final List<IceCandidate> iceCandidates;
+
+        public MessageParameters(String roomId, String clientId, String remoteInstanceId,
+                                 SessionDescription offerSdp, List<IceCandidate> iceCandidates) {
+            this.roomId = roomId;
+            this.clientId = clientId;
+            this.remoteInstanceId = remoteInstanceId;
+            this.offerSdp = offerSdp;
+            this.iceCandidates = iceCandidates;
+        }
+
+        @Override
+        public String toString() {
+            return "MessageParameters{" +
+                    "roomID=" + roomId +
+                    ", clientId='" + clientId + '\'' +
+                    ", remoteInstanceId=" + remoteInstanceId +
+                    ", offerSdp=" + offerSdp +
+                    ", iceCandidates=" + iceCandidates +
+                    '}';
+        }
+    }
+
+
+    //=========================================
 
     /**
      * 定义从服务器轮询后得到的新的房间号

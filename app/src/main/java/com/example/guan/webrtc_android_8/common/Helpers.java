@@ -179,6 +179,8 @@ public class Helpers {
                         String result = roomJson.getString("result");
                         if (!result.equals("SUCCESS")) {
                             reportError(roomId, "GAE POST error: " + result);
+                        }else {
+                            Log.d(TAG,"sendPostMessage success");
                         }
                     } catch (JSONException e) {
                         reportError(roomId, "GAE POST JSON error: " + e.toString());
