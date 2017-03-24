@@ -239,14 +239,6 @@ public class InstanceManager {
                 messageParameters = JsonHelper.messageHttpResponseParameters(response);
                 if (messageParameters != null) {
 
-                    if (messageParameters.offerSdp != null) {
-                        //relay offer SDP
-                        Log.e(TAG, "sigParams.offerSdp != null =====设置remote SDP====");
-                        SessionDescription sdp = new SessionDescription(messageParameters.offerSdp.type
-                                , messageParameters.offerSdp.description);
-                        setRemoteDescription(sdp);
-                    }
-
 
                     if (messageParameters.iceCandidates != null) {
                         // Add remote ICE candidates from room.
@@ -260,6 +252,17 @@ public class InstanceManager {
                             }
                         }
                     }
+
+                    if (messageParameters.offerSdp != null) {
+                        //relay offer SDP
+                        Log.e(TAG, "sigParams.offerSdp != null =====设置remote SDP====");
+                        SessionDescription sdp = new SessionDescription(messageParameters.offerSdp.type
+                                , messageParameters.offerSdp.description);
+                        setRemoteDescription(sdp);
+                    }
+
+
+
                 }
             }
         });

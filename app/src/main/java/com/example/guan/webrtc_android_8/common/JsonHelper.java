@@ -184,7 +184,7 @@ public class JsonHelper {
             SessionDescription offerSdp = null;
             JSONObject roomJson = new JSONObject(response);
 
-            Log.d(TAG, "MessageParameters: " + roomJson.toString());
+            Log.d(TAG, "====MessageParameters:==== " + roomJson.toString());
 
             String result = roomJson.getString("result");
             if (!result.equals("SUCCESS")) {

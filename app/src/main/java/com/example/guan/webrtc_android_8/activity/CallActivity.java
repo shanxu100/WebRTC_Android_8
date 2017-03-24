@@ -102,7 +102,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
 
     //辅助相关
     VideoAudioHelper vaHelper;
-    private int MaxInstance = 1;
+    private int MaxInstance = 3;
 
 
     @Override
@@ -494,11 +494,11 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                 //Log.d(TAG, roomId + ":Peer connection created.");
 
                 if (instanceManager.isPeerInitiator()) {
-                    Log.d(TAG, "Creating OFFER...");
+                    Log.d(TAG, instanceManager.getLocalInstanceId()+" Creating OFFER...");
                     // Create offer. create成功之后，会调用sdpObserver的onCreateSuccess方法
                     instanceManager.getPeerConnection().createOffer(instanceManager.getSdpObserver(), new MediaConstraints());
-                    return;
                 } else {
+                    Log.d(TAG, instanceManager.getLocalInstanceId()+" Gain Offer and Candidate...");
                     instanceManager.gainMessage();
                 }
             }
@@ -749,10 +749,10 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
          */
         @Override
         public void onCreateSuccess(SessionDescription origSdp) {
-            if (localSdp != null) {
-                Log.e(TAG, "Multiple SDP createMediaStream.");
-                return;
-            }
+//            if (localSdp != null) {
+//                Log.e(TAG, "Multiple SDP createMediaStream.");
+//                return;
+//            }
 
             String sdpDescription = origSdp.description;
             sdpDescription = preferCodec(sdpDescription, AUDIO_CODEC_ISAC, true);//audio
@@ -813,7 +813,6 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                         public void run() {
                             //将本地的sdp发送给信令服务器，并推送给已经注册过的用户，响应“先来者”的offer
                             instanceManager.sendAnswerSdp(localSdp);
-
                         }
                     });
                     drainCandidates();
