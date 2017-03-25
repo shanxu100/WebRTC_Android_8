@@ -185,6 +185,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                 yesOrNoDialog.setCallback(new YesOrNoDialog.YesOrNoDialogCallback() {
                     @Override
                     public void onClickButton(YesOrNoDialog.ClickedButton button, String message) {
+                        yesOrNoDialog.dismiss();
                         if (button== YesOrNoDialog.ClickedButton.POSITIVE)
                         {
                             for (Map.Entry<String, InstanceManager> entry : clientManager.getMap_instaces().entrySet()) {
