@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/diabg_bkg"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:text="选择模式\n"
+        android:textColor="@color/blue"
+        android:textSize="25sp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="10dp"
+        android:background="@color/lightgrey"
+        android:padding="20dp" />
+
+    <RadioGroup
+        android:id="@+id/modesetting_radiogrp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <RadioButton
+            android:id="@+id/p_2_m_radiobtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="一人直播模式"
+            android:textColor="@color/black"
+            android:textSize="18dp">
+
+        </RadioButton>
+
+        <RadioButton
+            android:id="@+id/m_2_m_radiobtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="多人互动模式"
+            android:textColor="@color/black"
+            android:textSize="18dp"></RadioButton>
+    </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="\n" />
+
+
+</LinearLayout>

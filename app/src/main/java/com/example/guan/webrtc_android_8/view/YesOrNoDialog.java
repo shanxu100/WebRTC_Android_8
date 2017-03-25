@@ -30,7 +30,7 @@ public class YesOrNoDialog extends Dialog {
     }
 
     private void setCustomDialog() {
-        View mView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_yesorno_for_permission, null);
+        View mView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_yesorno, null);
         message = (TextView) mView.findViewById(R.id.title);
         positiveButton = (Button) mView.findViewById(R.id.acceptbtn);
         negativeButton = (Button) mView.findViewById(R.id.refusebtn);

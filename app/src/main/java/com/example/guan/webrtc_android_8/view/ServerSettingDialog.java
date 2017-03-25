@@ -35,24 +35,13 @@ public class ServerSettingDialog extends Dialog {
         //getWindow().setLayout((int) (AppConstant.SCRRENWIDTH * 0.8), (int) (AppConstant.SCREENHEIGHT * 0.3));
     }
 
-    public ServerSettingDialog(Context context, int themeResId) {
-        super(context, themeResId);
-        setCustomeDialog();
-        //getWindow().setLayout((int) (AppConstant.SCRRENWIDTH * 0.8), (int) (AppConstant.SCREENHEIGHT * 0.3));
-    }
-
-    protected ServerSettingDialog(Context context, boolean cancelable, OnCancelListener cancelListener) {
-        super(context, cancelable, cancelListener);
-        setCustomeDialog();
-        //getWindow().setLayout((int) (AppConstant.SCRRENWIDTH * 0.8), (int) (AppConstant.SCREENHEIGHT * 0.3));
-    }
 
     public void setDialogCallback(DialogCallback callback) {
         this.callback = callback;
     }
 
     private void setCustomeDialog() {
-        View mView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_selectserver, null);
+        View mView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_serversetting, null);
         selectserver_radiogrp = (RadioGroup) mView.findViewById(R.id.selectserver_radiogrp);
 
 

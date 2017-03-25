@@ -29,6 +29,7 @@ import com.example.guan.webrtc_android_8.common.WebSocketClient;
 import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
 import com.example.guan.webrtc_android_8.utils.ClickUtil;
 import com.example.guan.webrtc_android_8.utils.ShowUtil;
+import com.example.guan.webrtc_android_8.view.YesOrNoDialog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -87,6 +88,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
     //链接参数相关
     private String roomUrl = "";
     private String roomId = "";
+    private String roomType = "";
 
     //连接对象相关
     private PeerConnectionFactory factory;
@@ -110,7 +112,8 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         initUI();
         initLink();
 
-        AppRTC_Common.RoomConnectionParameters connectionParameters = new AppRTC_Common.RoomConnectionParameters(roomUrl, roomId, false);
+        AppRTC_Common.RoomConnectionParameters connectionParameters =
+                new AppRTC_Common.RoomConnectionParameters(roomUrl, roomId);
         joinRoom(connectionParameters);
     }
 
@@ -120,6 +123,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         roomUrl = getIntent().getStringExtra("roomurl");
         roomId = getIntent().getStringExtra("roomid");
         role = (AppRTC_Common.RoomRole) getIntent().getExtras().get("role");
+        roomType = getIntent().getStringExtra("roomType");
 
         /**
          * 学习多线程的知识点
@@ -155,14 +159,12 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         remoteRender_2 = (SurfaceViewRenderer) findViewById(R.id.remote_renderer_2);
         remoteRender_3 = (SurfaceViewRenderer) findViewById(R.id.remote_renderer_3);
         renderer_layout = (RelativeLayout) findViewById(R.id.renderer_layout);
-        int width=renderer_layout.getWidth();
-        int height=renderer_layout.getHeight();
 
         rootEglBase = EglBase.create();
-        renderSetting(localRender, true,width,height);
-        renderSetting(remoteRender_1, false,width,height);
-        renderSetting(remoteRender_2, false,width,height);
-        renderSetting(remoteRender_3, false,width,height);
+        renderSetting(localRender, true);
+        renderSetting(remoteRender_1, false);
+        renderSetting(remoteRender_2, false);
+        renderSetting(remoteRender_3, false);
 
         stack_AvailableRemoteRender.push(remoteRender_3);
         stack_AvailableRemoteRender.push(remoteRender_2);
@@ -178,21 +180,37 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                  * entrySet是 键-值 对的集合，Set里面的类型是Map.Entry
                  */
 
-                for (Map.Entry<String, InstanceManager> entry : clientManager.getMap_instaces().entrySet()) {
+                final YesOrNoDialog yesOrNoDialog=new YesOrNoDialog(CallActivity.this);
+                yesOrNoDialog.setMeesage("您确定要退出房间吗？ \n\n退出后将不可再加入该房间。");
+                yesOrNoDialog.setCallback(new YesOrNoDialog.YesOrNoDialogCallback() {
+                    @Override
+                    public void onClickButton(YesOrNoDialog.ClickedButton button, String message) {
+                        if (button== YesOrNoDialog.ClickedButton.POSITIVE)
+                        {
+                            for (Map.Entry<String, InstanceManager> entry : clientManager.getMap_instaces().entrySet()) {
 
-                    try {
-                        entry.getValue().disconnect();
-                        Log.e(TAG, "close instanceManager: instanceId=" + entry.getKey());
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                                try {
+                                    entry.getValue().disconnect();
+                                    Log.e(TAG, "close instanceManager: instanceId=" + entry.getKey());
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            clientManager.getMap_instaces().clear();
+                            closeOwn();
+                        }else if (button== YesOrNoDialog.ClickedButton.NEGATIVE)
+                        {
+                            yesOrNoDialog.dismiss();
+                        }
                     }
-                }
-                clientManager.getMap_instaces().clear();
-                closeOwn();
+                });
 
+                yesOrNoDialog.show();
             }
         });
 
+
+        /**
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -207,11 +225,10 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         recover_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //updateView(remote_renderer_layout_1, remoteRender_1);
-                //recoverView();
             }
         });
 
+         **/
 
     }
 
@@ -250,13 +267,12 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
      *
      * @param renderer
      */
-    private void renderSetting(final SurfaceViewRenderer renderer, boolean isLocalRenderer,
-                               int width,int height) {
+    private void renderSetting(final SurfaceViewRenderer renderer, boolean isLocalRenderer) {
         renderer.init(rootEglBase.getEglBaseContext(), null);
         //设置大小
         final ViewGroup.LayoutParams layoutParams = renderer.getLayoutParams();
         layoutParams.width = AppConstant.SCRRENWIDTH / 2;
-        layoutParams.height = (AppConstant.SCREENHEIGHT - 100) / 2;
+        layoutParams.height = (AppConstant.SCREENHEIGHT - 50) / 2;
         CallActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -265,7 +281,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
             }
         });
 
-        renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
+        renderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_BALANCED);
 
         if (isLocalRenderer) {
             //设置控件叠加到其他控件上面
@@ -410,7 +426,8 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
     private void joinRoom(final AppRTC_Common.RoomConnectionParameters connectionParameters) {
 
 
-        String roomJoin_Url = connectionParameters.roomUrl + "/" + ROOM_JOIN + "/" + connectionParameters.roomId;
+        String roomJoin_Url = connectionParameters.roomUrl + "/" + ROOM_JOIN + "/" +
+                connectionParameters.roomId ;
         String roomMessage = "";
         Log.d(TAG, "Connecting to room: " + roomJoin_Url + "\troomMessage:" + roomMessage);
         AsyncHttpURLConnection httpConnection =
@@ -596,8 +613,8 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
 
         @Override
         public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-
             Log.d(TAG, "IceConnectionState---------" + iceConnectionState);
+
             if (iceConnectionState == PeerConnection.IceConnectionState.CONNECTED) {
                 Log.d(TAG, "localInstanceId:" + instanceManager.getLocalInstanceId() + "ICE connected");
                 CallActivity.this.runOnUiThread(new Runnable() {
@@ -689,7 +706,6 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                 remoteVideoTrack = mediaStream.videoTracks.get(0);
                 remoteVideoTrack.setEnabled(true); // renderVideo = true;
                 remoteVideoTrack.addRenderer(new VideoRenderer(instanceManager.getRemoteRenderer()));
-
             }
 
         }

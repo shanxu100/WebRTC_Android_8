@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +26,7 @@ import com.example.guan.webrtc_android_8.R;
 import com.example.guan.webrtc_android_8.common.AppConstant;
 import com.example.guan.webrtc_android_8.common.AppRTC_Common;
 import com.example.guan.webrtc_android_8.utils.ClickUtil;
+import com.example.guan.webrtc_android_8.view.ModeSettingDialog;
 import com.example.guan.webrtc_android_8.view.ServerSettingDialog;
 import com.example.guan.webrtc_android_8.view.YesOrNoDialog;
 
@@ -38,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
     Button serverSetting_btn;
     EditText roomid_et;
     TextView selectedServer_tv;
-    //RadioButton selected_rbut;
+    ImageButton modeSetting_imgbtn;
+    TextView selectedMode_tv;
     RadioGroup role_radiogrp;
     AppRTC_Common.RoomRole role;
     String roomid;
@@ -68,8 +71,10 @@ public class MainActivity extends AppCompatActivity {
         startCall_btn = (Button) this.findViewById(R.id.Call_btn);
         serverSetting_btn = (Button) this.findViewById(R.id.serversetting_btn);
         roomid_et = (EditText) this.findViewById(R.id.RoomID_et);
-        selectedServer_tv = (TextView) this.findViewById(R.id.selectserver_tv);
+        selectedServer_tv = (TextView) this.findViewById(R.id.serversetting_tv);
         role_radiogrp = (RadioGroup) this.findViewById(R.id.role_radiogrp);
+        modeSetting_imgbtn = (ImageButton) this.findViewById(R.id.selectmode_imgbtn);
+        selectedMode_tv = (TextView) this.findViewById(R.id.modesetting_tv);
 
 
         role_radiogrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -114,7 +119,8 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("roomurl", AppRTC_Common.WebRTC_URL);
                 intent.putExtra("roomid", roomid);
                 intent.putExtra("role", role);
-                Log.d(TAG, "roomurl:" + AppRTC_Common.WebRTC_URL + "\troomid:" + roomid + "\trole:" + role);
+                Log.d(TAG, "roomurl:" + AppRTC_Common.WebRTC_URL + "\troomid:" + roomid +
+                        "\trole:" + role + "\tmode: " + AppRTC_Common.selectedMode);
 
 
                 //startActivity(intent);
@@ -143,13 +149,42 @@ public class MainActivity extends AppCompatActivity {
                 dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        showSelectedServerOnActivity();
+                        selectedServer_tv.setText(AppRTC_Common.WebRTC_URL);
+
                     }
                 });
                 dialog.show();
             }
         });
-        showSelectedServerOnActivity();
+        selectedServer_tv.setText(AppRTC_Common.WebRTC_URL);
+
+
+        modeSetting_imgbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ModeSettingDialog dialog = new ModeSettingDialog(mContext);
+                dialog.setCanceledOnTouchOutside(true);//触摸dialog以外的区域，dialog会消失
+                dialog.setDialogCallback(new ModeSettingDialog.DialogCallback() {
+                    @Override
+                    public void onClickRadioButton(ModeSettingDialog.Mode mode) {
+                        if (mode == ModeSettingDialog.Mode.M_2_M) {
+                            AppRTC_Common.selectedMode = AppRTC_Common.M_2_M;
+                        } else if (mode == ModeSettingDialog.Mode.P_2_M) {
+                            AppRTC_Common.selectedMode = AppRTC_Common.P_2_M;
+                        }
+                    }
+                });
+                dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        //showSelectedServerOnActivity();
+                        selectedMode_tv.setText(AppRTC_Common.selectedMode);
+                    }
+                });
+                dialog.show();
+            }
+        });
+        selectedMode_tv.setText(AppRTC_Common.selectedMode);
 
 
     }
@@ -216,10 +251,6 @@ public class MainActivity extends AppCompatActivity {
         AppConstant.SCRRENWIDTH = width;
         AppConstant.SCREENHEIGHT = height;
         Log.d(TAG, "SCRRENWIDTH:\t" + width + "\tSCREENHEIGHT:\t" + height);
-    }
-
-    private void showSelectedServerOnActivity() {
-        selectedServer_tv.setText(AppRTC_Common.WebRTC_URL);
     }
 
     @Override

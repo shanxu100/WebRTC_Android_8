@@ -121,8 +121,7 @@ public class VideoAudioHelper {
                 return null;
             } else {
                 mediaStream.addTrack(videoTrack);
-                //mediaStream.addTrack(audioTrack);
-
+                mediaStream.addTrack(audioTrack);
                 return mediaStream;
             }
 

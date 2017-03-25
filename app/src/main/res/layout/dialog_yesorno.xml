@@ -12,8 +12,9 @@
     <RelativeLayout
         android:id="@+id/top_rl"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_above="@+id/bottomo_ll"
+        android:gravity="center"
 
         >
 
@@ -24,7 +25,7 @@
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:gravity="center_horizontal|center_vertical"
-            android:text="请授予相关权限，否则程序无法运行。\n\n点击确定，重新授予权限。\n点击取消，立即终止程序。\n"
+            android:text="balabala"
             android:textColor="@color/black" />
 
     </RelativeLayout>
@@ -43,7 +44,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-
         android:orientation="horizontal">
 
         <LinearLayout
@@ -54,7 +54,8 @@
                 android:id="@+id/acceptbtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:layout_marginTop="15dp"
                 android:layout_weight="1"
                 android:background="@null"
                 android:text="确定"
@@ -66,19 +67,17 @@
                 android:layout_height="match_parent"
                 android:background="@color/lightgrey" />
 
-
             <Button
                 android:id="@+id/refusebtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="6dp"
-                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:layout_marginTop="15dp"
                 android:layout_weight="1"
                 android:background="@null"
                 android:text="取消"
                 android:textColor="@color/black"
                 android:textSize="18sp" />
-
         </LinearLayout>
     </RelativeLayout>
 

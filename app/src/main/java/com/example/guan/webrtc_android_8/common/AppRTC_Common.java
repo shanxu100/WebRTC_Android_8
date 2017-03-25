@@ -41,8 +41,9 @@ public class AppRTC_Common {
     public static final String ROOM_JOIN = "join";
     public static final String ROOM_MESSAGE = "message";
     public static final String ROOM_LEAVE = "leave";
-    //public static final String ROOM_BACKUP = "backup";
     public static final String ROOM_QUERY = "query";
+    public static final String ROOM_M_TO_M = "0";//多对多
+    public static final String ROOM_P_TO_M = "1";//一对多
 
 
     public static final String VIDEO_CODEC_VP8 = "VP8";
@@ -52,21 +53,25 @@ public class AppRTC_Common {
     public static final String AUDIO_CODEC_ISAC = "ISAC";
     public static final String preferredVideoCodec = VIDEO_CODEC_VP8;
 
-    //public static final String WebRTC_URL="https://appr.tc";
-    public static String WebRTC_URL = "https://i-test.com.cn";
-    public static String turnServer_URL = "https://i-test.com.cn/iceconfig.php";
-
+    //服务器设置选项;
     public static final String aliyun_WebRTC_URL = "https://i-test.com.cn";
     public static final String aliyun_turnServer_URL = "https://i-test.com.cn/iceconfig.php";
 
     public static final String labServer_WebRTC_URL = "https://222.201.145.167";
     public static final String labServer_turnServer_URL = "https://222.201.145.167/iceconfig.php";
 
+    public static String WebRTC_URL = aliyun_WebRTC_URL;
+    public static String turnServer_URL = aliyun_turnServer_URL;
+
+    //模式设置选项
+    public static String P_2_M="Point to Multipoint";
+    public static String M_2_M="Multipoint to Multipoint";
+    public static String selectedMode=M_2_M;
+
+
     //public static final String WebRTCUrl = WebRTC_URL;
     public static final String HTTP_ORIGIN = WebRTC_URL;
     public static final String TAG_COMM = "appRTC-";
-
-    public static int roomMax = 4;
 
     private static String TAG = AppRTC_Common.TAG_COMM + "AppRTC_Common";
 
@@ -77,19 +82,17 @@ public class AppRTC_Common {
     public static class RoomConnectionParameters {
         public final String roomUrl;
         public final String roomId;
-        public final boolean backup;
+        //public final String roomType;
 
         @Override
         public String toString() {
             return "roomUrl:" + roomUrl
-                    + "\troomId:" + roomId
-                    + "\tbackup:" + backup;
+                    + "\troomId:" + roomId;
         }
 
-        public RoomConnectionParameters(String roomUrl, String roomId, boolean backup) {
+        public RoomConnectionParameters(String roomUrl, String roomId) {
             this.roomUrl = roomUrl;
             this.roomId = roomId;
-            this.backup = backup;
         }
     }
 
@@ -112,7 +115,7 @@ public class AppRTC_Common {
 
         public SignalingParameters(String result, List<PeerConnection.IceServer> iceServers, boolean initiator,
                                    String clientId, String wssUrl, String wssPostUrl, SessionDescription offerSdp,
-                                   List<IceCandidate> iceCandidates, String roomId,String roomSize) {
+                                   List<IceCandidate> iceCandidates, String roomId, String roomSize) {
             this.result = result;
             this.iceServers = iceServers;
             //this.initiator = initiator;
