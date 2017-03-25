@@ -213,9 +213,21 @@ public class InstanceManager {
     }
 
     public void setRemoteInstanceId(String remoteInstanceId) {
-        messageParameters.remoteInstanceId = remoteInstanceId;
+        if (messageParameters == null) {
+            messageParameters = new AppRTC_Common.MessageParameters(sigParms.roomId, sigParms.clientId, remoteInstanceId,
+                    null, null);
+        } else {
+            messageParameters.remoteInstanceId = remoteInstanceId;
+        }
     }
 
+    public String getRemoteInstanceId() {
+        if (messageParameters != null) {
+            return messageParameters.remoteInstanceId;
+        } else {
+            return "";
+        }
+    }
 
 
     //=====================================================
@@ -224,8 +236,8 @@ public class InstanceManager {
      * 以下是回调方法
      */
     //=====================================================
-    public void gainMessage() {
-        AsyncHttpURLConnection httpURLConnection = new AsyncHttpURLConnection("POST", queryUrl,
+    public void gainMessage(int count) {
+        AsyncHttpURLConnection httpURLConnection = new AsyncHttpURLConnection("POST", queryUrl + "/" + count,
                 "", new AsyncHttpURLConnection.AsyncHttpEvents() {
             @Override
             public void onHttpError(String errorMessage) {
@@ -237,30 +249,31 @@ public class InstanceManager {
             public void onHttpComplete(String response) {
 
                 messageParameters = JsonHelper.messageHttpResponseParameters(response);
+                Log.e(TAG,localInstanceId+"/"+getRemoteInstanceId());
+                setRemoteInstanceId(messageParameters.remoteInstanceId);
                 if (messageParameters != null) {
-
 
                     if (messageParameters.iceCandidates != null) {
                         // Add remote ICE candidates from room.
-                        Log.e(TAG, "设置remote iceCandidates");
+                        Log.e(TAG, localInstanceId + "/" + getRemoteInstanceId() + " 设置remote iceCandidates");
                         LinkedList<IceCandidate> queuedRemoteCandidates = getQueuedRemoteCandidates();
                         for (IceCandidate iceCandidate : messageParameters.iceCandidates) {
                             if (queuedRemoteCandidates != null) {
                                 queuedRemoteCandidates.add(iceCandidate);
                             } else {
-                                getPeerConnection().addIceCandidate(iceCandidate);
+                                Log.e(TAG, "queuedRemoteCandidates is null");
+                                //getPeerConnection().addIceCandidate(iceCandidate);
                             }
                         }
                     }
 
                     if (messageParameters.offerSdp != null) {
                         //relay offer SDP
-                        Log.e(TAG, "sigParams.offerSdp != null =====设置remote SDP====");
+                        Log.e(TAG, localInstanceId + "/" + getRemoteInstanceId() + "sigParams.offerSdp != null =====设置remote SDP====");
                         SessionDescription sdp = new SessionDescription(messageParameters.offerSdp.type
                                 , messageParameters.offerSdp.description);
                         setRemoteDescription(sdp);
                     }
-
 
 
                 }
@@ -332,7 +345,7 @@ public class InstanceManager {
     // Send Ice candidate to the other participant.
     public void sendLocalIceCandidate(final IceCandidate candidate) {
 
-        Log.e(TAG, "send Local IceCandidate");
+        //Log.e(TAG, "send Local IceCandidate");
 
         JSONObject json = new JSONObject();
 
@@ -414,8 +427,7 @@ public class InstanceManager {
 
 
     public void removeRemoteIceCandidates(IceCandidate[] candidates) {
-        Log.e(TAG, "删除远端Ice:removeRemoteIceCandidates--------");
-
+        //Log.e(TAG, "删除远端Ice:removeRemoteIceCandidates--------");
         if (queuedRemoteCandidates != null) {
             Log.d(TAG, "Add " + queuedRemoteCandidates.size() + " remote candidates");
             for (IceCandidate candidate : queuedRemoteCandidates) {
@@ -478,11 +490,10 @@ public class InstanceManager {
         JSONObject json = new JSONObject();
         jsonPut(json, "sdp", sdp.description);
         jsonPut(json, "type", "offer");
-        //jsonPut(json, "instanceId", localInstanceId);
 
         //加入clientID
         //====
-        Log.e(TAG, "send OfferSdp: " + json.toString());
+        Log.e(TAG, "send OfferSdp: local:" + localInstanceId + "\tmessageUrl: " + messageUrl);
 
         sendPostMessage(AppRTC_Common.MessageType.MESSAGE,
                 messageUrl,
@@ -506,7 +517,7 @@ public class InstanceManager {
         jsonPut(json, "type", "answer");
         jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
         jsonPut(json, "senderId", localInstanceId);
-        Log.e(TAG, "send AnswerSdp: " + json.toString());
+        Log.e(TAG, "send AnswerSdp: localInstanceId:" + localInstanceId + "\tremote: " + messageParameters.remoteInstanceId);
 
         wsClient.send(json.toString());
 

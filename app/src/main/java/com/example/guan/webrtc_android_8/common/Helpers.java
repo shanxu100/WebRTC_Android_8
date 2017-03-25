@@ -163,7 +163,7 @@ public class Helpers {
         if (message != null) {
             logInfo += ". Message: " + message;
         }
-        Log.d(TAG, "C->GAE: " + logInfo);
+        //Log.d(TAG, "C->GAE: " + logInfo);
         AsyncHttpURLConnection httpConnection = new AsyncHttpURLConnection(
                 "POST", url, message, new AsyncHttpURLConnection.AsyncHttpEvents() {
             @Override
@@ -180,7 +180,7 @@ public class Helpers {
                         if (!result.equals("SUCCESS")) {
                             reportError(roomId, "GAE POST error: " + result);
                         }else {
-                            Log.d(TAG,"sendPostMessage success");
+                            //Log.d(TAG,"sendPostMessage success");
                         }
                     } catch (JSONException e) {
                         reportError(roomId, "GAE POST JSON error: " + e.toString());

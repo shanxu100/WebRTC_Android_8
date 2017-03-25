@@ -98,7 +98,7 @@ public class JsonHelper {
             SessionDescription offerSdp = null;
             JSONObject roomJson = new JSONObject(response);
 
-            Log.d(TAG, "roomHttpResponseParse: " + roomJson.toString());
+            Log.e(TAG, "roomHttpResponseParse: " + roomJson.toString());
             String result = roomJson.getString("result");
             //=================
             if (result.equals("ROOM_FULL")) {
@@ -121,18 +121,15 @@ public class JsonHelper {
                 String wssPostUrl = roomJson.getString("wss_post_url");
                 String roomSize = roomJson.getString("room_size");
                 boolean initiator = (roomJson.getBoolean("is_initiator"));
-                //String remoteInstanceId = (String) roomJson.get("instanceID");
 
-                Log.d(TAG, "RoomId: " + roomId + ". ClientId: " + clientId );
+                Log.d(TAG, "RoomId: " + roomId + ". ClientId: " + clientId);
                 Log.d(TAG, "Initiator: " + initiator);
-                Log.d(TAG, "roomSize: " + roomSize);
-                Log.d(TAG, "WSS url: " + wssUrl);
-                Log.d(TAG, "WSS POST url: " + wssPostUrl);
+                Log.e(TAG, "roomSize: " + roomSize);
+                //Log.d(TAG, "WSS url: " + wssUrl);
+                //Log.d(TAG, "WSS POST url: " + wssPostUrl);
 
                 LinkedList<PeerConnection.IceServer> iceServers =
                         iceServersFromPCConfigJSON(roomJson.getString("pc_config"));
-
-                Log.e(TAG, "====pc_config=====: " + roomJson.getString("pc_config"));
 
                 boolean isTurnPresent = false;
                 //boolean isTurnPresent = true;
@@ -156,8 +153,8 @@ public class JsonHelper {
                 }
 
                 AppRTC_Common.SignalingParameters params = new AppRTC_Common.SignalingParameters(result,
-                        iceServers, initiator, clientId, roomSize,
-                        wssUrl, wssPostUrl, offerSdp, iceCandidates, roomId);
+                        iceServers, initiator, clientId,
+                        wssUrl, wssPostUrl, offerSdp, iceCandidates, roomId, roomSize);
 
                 return params;
 
@@ -177,6 +174,7 @@ public class JsonHelper {
         }
     }
 
+
     public static AppRTC_Common.MessageParameters messageHttpResponseParameters(String response) {
 
         try {
@@ -184,7 +182,7 @@ public class JsonHelper {
             SessionDescription offerSdp = null;
             JSONObject roomJson = new JSONObject(response);
 
-            Log.d(TAG, "====MessageParameters:==== " + roomJson.toString());
+            Log.e(TAG, "====MessageParameters:==== "+response);
 
             String result = roomJson.getString("result");
             if (!result.equals("SUCCESS")) {
@@ -199,7 +197,7 @@ public class JsonHelper {
             String messagesString = roomJson.getString("messages");
 
             JSONArray messages = new JSONArray(messagesString);
-            Log.e(TAG, "message.length = " + messages.length() + "\troomJson Message : " + messagesString);
+            //Log.e(TAG, "message.length = " + messages.length() + "\troomJson Message : " + messagesString);
 
             for (int i = 0; i < messages.length(); ++i) {
                 String messageString = messages.getString(i);
@@ -209,13 +207,13 @@ public class JsonHelper {
                 //Log.e(TAG,"Message type : "+messageType);
                 if (messageType.equals("offer")) {
 
-                    Log.e(TAG, "收到sdp offer\t");
+                    //Log.e(TAG, "收到sdp offer\t");
                     offerSdp = new SessionDescription(
                             SessionDescription.Type.fromCanonicalForm(messageType), message.getString("sdp"));
 
                 } else if (messageType.equals("candidate")) {
 
-                    Log.e(TAG, "收到candidate\t" + message.getString("candidate"));
+                    //Log.e(TAG, "收到candidate\t" + message.getString("candidate"));
                     IceCandidate candidate = new IceCandidate(
                             message.getString("id"), message.getInt("label"), message.getString("candidate"));
                     iceCandidates.add(candidate);
@@ -225,7 +223,8 @@ public class JsonHelper {
                 }
             }
 
-            return new AppRTC_Common.MessageParameters(roomId, clientId, remoteInstanceId, offerSdp, iceCandidates);
+            return new AppRTC_Common.MessageParameters(roomId, clientId,
+                    remoteInstanceId, offerSdp, iceCandidates);
 
 
         } catch (Exception e) {

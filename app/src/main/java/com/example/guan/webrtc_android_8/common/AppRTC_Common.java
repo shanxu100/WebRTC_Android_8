@@ -111,8 +111,8 @@ public class AppRTC_Common {
         public final String roomId;
 
         public SignalingParameters(String result, List<PeerConnection.IceServer> iceServers, boolean initiator,
-                                   String clientId, String roomSize, String wssUrl, String wssPostUrl, SessionDescription offerSdp,
-                                   List<IceCandidate> iceCandidates, String roomId) {
+                                   String clientId, String wssUrl, String wssPostUrl, SessionDescription offerSdp,
+                                   List<IceCandidate> iceCandidates, String roomId,String roomSize) {
             this.result = result;
             this.iceServers = iceServers;
             //this.initiator = initiator;
@@ -132,7 +132,7 @@ public class AppRTC_Common {
                     "iceServers=" + iceServers.get(0) +
                     //", initiator=" + initiator +
                     ", clientId='" + clientId + '\'' +
-                    ", roomSize='" + roomSize + '\'' +
+                    //", roomSize='" + roomSize + '\'' +
                     ", wssUrl='" + wssUrl + '\'' +
                     ", wssPostUrl='" + wssPostUrl + '\'' +
                     ", offerSdp=" + offerSdp +
@@ -149,8 +149,10 @@ public class AppRTC_Common {
         public final SessionDescription offerSdp;
         public final List<IceCandidate> iceCandidates;
 
-        public MessageParameters(String roomId, String clientId, String remoteInstanceId,
-                                 SessionDescription offerSdp, List<IceCandidate> iceCandidates) {
+        public MessageParameters(String roomId, String clientId,
+                                 String remoteInstanceId,
+                                 SessionDescription offerSdp,
+                                 List<IceCandidate> iceCandidates) {
             this.roomId = roomId;
             this.clientId = clientId;
             this.remoteInstanceId = remoteInstanceId;
@@ -161,8 +163,8 @@ public class AppRTC_Common {
         @Override
         public String toString() {
             return "MessageParameters{" +
-                    "roomID=" + roomId +
-                    ", clientId='" + clientId + '\'' +
+//                    "roomID=" + roomId +
+//                    ", clientId='" + clientId + '\'' +
                     ", remoteInstanceId=" + remoteInstanceId +
                     ", offerSdp=" + offerSdp +
                     ", iceCandidates=" + iceCandidates +

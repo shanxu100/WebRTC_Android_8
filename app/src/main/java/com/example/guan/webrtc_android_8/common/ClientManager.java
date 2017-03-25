@@ -69,7 +69,7 @@ public class ClientManager {
         if (map_instaces.containsKey(instanceId)) {
             return map_instaces.get(instanceId);
         } else {
-            Log.e(TAG, "没有找到该实例，instanceId=" + instanceId);
+            //Log.e(TAG, "没有找到该实例，instanceId=" + instanceId);
             return null;
         }
     }
