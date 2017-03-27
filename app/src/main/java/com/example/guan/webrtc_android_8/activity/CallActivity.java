@@ -1,13 +1,13 @@
 package com.example.guan.webrtc_android_8.activity;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telecom.Call;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -54,7 +54,6 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.AUDIO_CODEC_ISAC;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_JOIN;
@@ -65,7 +64,7 @@ import static com.example.guan.webrtc_android_8.common.JsonHelper.toJavaCandidat
 public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICall {
 
     //类相关
-    private static Context context;
+    private static Context mContext;
     private static String TAG = AppRTC_Common.TAG_COMM + "CallActivity";
 
     //UI相关和mediaStream相关
@@ -74,7 +73,6 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
     private SurfaceViewRenderer remoteRender_2;
     private SurfaceViewRenderer remoteRender_3;
     private RelativeLayout renderer_layout;
-    private static Stack<SurfaceViewRenderer> stack_AvailableRemoteRender = new Stack<>();
     private Button cancel_btn;
     private Button recover_btn;
     private EglBase rootEglBase;
@@ -85,10 +83,6 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
     private Handler handler;
     private String ThreadTAG = "looperThread_TAG";
 
-    //链接参数相关
-    private String roomUrl = "";
-    private String roomId = "";
-    private String roomType = "";
 
     //连接对象相关
     private PeerConnectionFactory factory;
@@ -112,18 +106,12 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         initUI();
         initLink();
 
-        AppRTC_Common.RoomConnectionParameters connectionParameters =
-                new AppRTC_Common.RoomConnectionParameters(roomUrl, roomId);
-        joinRoom(connectionParameters);
+        joinRoom();
     }
 
     private void initData() {
 
-        context = CallActivity.this;
-        roomUrl = getIntent().getStringExtra("roomurl");
-        roomId = getIntent().getStringExtra("roomid");
-        role = (AppRTC_Common.RoomRole) getIntent().getExtras().get("role");
-        roomType = getIntent().getStringExtra("roomType");
+        mContext = CallActivity.this;
 
         /**
          * 学习多线程的知识点
@@ -141,6 +129,8 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
             }
         });
 
+        clientManager = new ClientManager(MaxInstance, handler);
+
 
     }
 
@@ -151,7 +141,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         cancel_btn = (Button) this.findViewById(R.id.Cancel_btn);
         recover_btn = (Button) this.findViewById(R.id.recover_btn);
         roomID_tv = (TextView) this.findViewById(R.id.RoomID_tv);
-        roomID_tv.setText(roomId);
+        roomID_tv.setText(AppRTC_Common.selected_roomId);
 
         //设置视频的框框
         localRender = (SurfaceViewRenderer) findViewById(R.id.local_renderer);
@@ -166,9 +156,9 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         renderSetting(remoteRender_2, false);
         renderSetting(remoteRender_3, false);
 
-        stack_AvailableRemoteRender.push(remoteRender_3);
-        stack_AvailableRemoteRender.push(remoteRender_2);
-        stack_AvailableRemoteRender.push(remoteRender_1);
+        clientManager.getStack_AvailableRemoteRender().push(remoteRender_3);
+        clientManager.getStack_AvailableRemoteRender().push(remoteRender_2);
+        clientManager.getStack_AvailableRemoteRender().push(remoteRender_1);
 
         cancel_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -180,14 +170,13 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                  * entrySet是 键-值 对的集合，Set里面的类型是Map.Entry
                  */
 
-                final YesOrNoDialog yesOrNoDialog=new YesOrNoDialog(CallActivity.this);
+                final YesOrNoDialog yesOrNoDialog = new YesOrNoDialog(CallActivity.this);
                 yesOrNoDialog.setMeesage("您确定要退出房间吗？ \n\n退出后将不可再加入该房间。");
                 yesOrNoDialog.setCallback(new YesOrNoDialog.YesOrNoDialogCallback() {
                     @Override
                     public void onClickButton(YesOrNoDialog.ClickedButton button, String message) {
                         yesOrNoDialog.dismiss();
-                        if (button== YesOrNoDialog.ClickedButton.POSITIVE)
-                        {
+                        if (button == YesOrNoDialog.ClickedButton.POSITIVE) {
                             for (Map.Entry<String, InstanceManager> entry : clientManager.getMap_instaces().entrySet()) {
 
                                 try {
@@ -199,8 +188,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                             }
                             clientManager.getMap_instaces().clear();
                             closeOwn();
-                        }else if (button== YesOrNoDialog.ClickedButton.NEGATIVE)
-                        {
+                        } else if (button == YesOrNoDialog.ClickedButton.NEGATIVE) {
                             yesOrNoDialog.dismiss();
                         }
                     }
@@ -212,21 +200,19 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
 
 
         /**
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+         View.OnClickListener listener = new View.OnClickListener() {
+        @Override public void onClick(View v) {
 
-            }
+        }
         };
 
-        remoteRender_1.setOnClickListener(listener);
-        remoteRender_2.setOnClickListener(listener);
-        remoteRender_3.setOnClickListener(listener);
+         remoteRender_1.setOnClickListener(listener);
+         remoteRender_2.setOnClickListener(listener);
+         remoteRender_3.setOnClickListener(listener);
 
-        recover_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            }
+         recover_btn.setOnClickListener(new View.OnClickListener() {
+        @Override public void onClick(View v) {
+        }
         });
 
          **/
@@ -240,7 +226,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
             PeerConnectionFactory.initializeInternalTracer();
             PeerConnectionFactory.initializeFieldTrials("");
             if (!PeerConnectionFactory.initializeAndroidGlobals(
-                    context, true, true, true)) {
+                    mContext, true, true, true)) {
                 Log.e(TAG, "Failed to initializeAndroidGlobals");
             }
             factoryOpyions = new PeerConnectionFactory.Options();
@@ -250,9 +236,8 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
             factory.setVideoHwAccelerationOptions(rootEglBase.getEglBaseContext(), rootEglBase.getEglBaseContext());
             Log.d(TAG, "Peer connection factory created.");
 
-            vaHelper = new VideoAudioHelper(context, factory, localRender);
+            vaHelper = new VideoAudioHelper(mContext, factory, localRender);
             vaHelper.createLocalMedia();
-
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -301,36 +286,22 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
         });
     }
 
-    /**
-     * 获取一个可用并且已经初始化好的Render
-     *
-     * @return
-     */
-    private SurfaceViewRenderer getAvailableRemoteRender() {
-        //Log.e(TAG, "===========调用一次getAvailableRemoteRender=============");
-        if (!stack_AvailableRemoteRender.empty()) {
-            Log.e(TAG, "Size of Remote Render Stack is: " + stack_AvailableRemoteRender.size());
-            return stack_AvailableRemoteRender.pop();
-        } else {
-            Log.e(TAG, "无可用的RemoteRender");
-            return null;
-        }
-    }
 
     /**
+     * 为
      * @param instanceManager
      */
-    private void allocateResources(InstanceManager instanceManager) {
+    private boolean allocateResources(InstanceManager instanceManager) {
 
         Log.d(TAG, "====================allocateResources===================");
-        String roomId = instanceManager.getSigParms().roomId;
+        String localInstanceId = instanceManager.getLocalInstanceId();
 
 
         //获取可用的render，并指定给PeerManager
-        SurfaceViewRenderer viewRenderer = getAvailableRemoteRender();
+        SurfaceViewRenderer viewRenderer = clientManager.getAvailableRemoteRender();
         if (viewRenderer == null) {
             Log.e(TAG, "stack_AvailableRemoteRender.pop()：remoteRender is null");
-            return;
+            return false;
         }
         instanceManager.setRemoteRenderer(viewRenderer);
 
@@ -363,19 +334,24 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                 pcObserver);// 注意 pcObserver 的动作
         instanceManager.setPeerConnection(peerConnection);
         if (null == peerConnection) {
-            Log.e(TAG, roomId + ":Failed to Create Peer connection.");
-            return;
+            Log.e(TAG, localInstanceId + ":Failed to Create Peer connection.");
+            return false;
         }
-        Log.d(TAG, roomId + ":Peer connection created.");
+        Log.d(TAG, localInstanceId + ":Peer connection created.");
 
         //创建并指定SDPObserver
         SDPObserver sdpObserver = new SDPObserver(instanceManager);
         instanceManager.setSdpObserver(sdpObserver);
 
         //创建并指定MediaStream
-        instanceManager.setMediaStream(vaHelper.createMediaStream(roomId));
+        MediaStream mediaStream = vaHelper.createMediaStream(localInstanceId);
+        if (mediaStream == null) {
+            Log.e(TAG, localInstanceId + ":Failed to Create MediaStream");
+            return false;
+        }
+        instanceManager.setMediaStream(mediaStream);
         peerConnection.addStream(instanceManager.getMediaStream());
-
+        return true;
     }
 
     /**
@@ -398,7 +374,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
             CallActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(context, "房间已被创建,您当前只能“加入该房间”", Toast.LENGTH_LONG).show();
+                    Toast.makeText(mContext, "房间已被创建,您当前只能“加入该房间”", Toast.LENGTH_LONG).show();
                 }
             });
             role = AppRTC_Common.RoomRole.SLAVE;
@@ -408,7 +384,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
             CallActivity.this.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(context, "您已经“创建房间”,等待其他人只能加入...", Toast.LENGTH_LONG).show();
+                    Toast.makeText(mContext, "您已经“创建房间”,等待其他人只能加入...", Toast.LENGTH_LONG).show();
                 }
             });
             role = AppRTC_Common.RoomRole.MASTER;
@@ -422,21 +398,21 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
     /**
      * 向服务器发出请求。获得回应，进行处理。
      *
-     * @param connectionParameters
+     * @param
      */
-    private void joinRoom(final AppRTC_Common.RoomConnectionParameters connectionParameters) {
+    private void joinRoom() {
 
 
-        String roomJoin_Url = connectionParameters.roomUrl + "/" + ROOM_JOIN + "/" +
-                connectionParameters.roomId ;
+        String roomJoin_Url = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_JOIN + "/" +
+                AppRTC_Common.selected_roomId;
         String roomMessage = "";
         Log.d(TAG, "Connecting to room: " + roomJoin_Url + "\troomMessage:" + roomMessage);
         AsyncHttpURLConnection httpConnection =
                 new AsyncHttpURLConnection("POST", roomJoin_Url, null, new AsyncHttpURLConnection.AsyncHttpEvents() {
                     @Override
-                    public void onHttpError(String errorMessage) {
+                    public void onHttpError(final String errorMessage) {
                         Log.e(TAG, "Room connection error: " + errorMessage);
-                        Toast.makeText(CallActivity.this, "连接房间服务器失败", Toast.LENGTH_SHORT).show();
+                        showToast("连接房间服务器失败:" + errorMessage);
                     }
 
                     @Override
@@ -450,13 +426,12 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                          */
                         if (sigParms.result.equals("ROOM_FULL")) {
 
-                            //加入房间失败，获取新的房间号，重新加入
-                            //joinRoom(new AppRTC_Common.RoomConnectionParameters(AppRTC_Common.WebRTC_URL, sigParms.backup, true));
-                            Toast.makeText(CallActivity.this, "加入房间失败:房间已满", Toast.LENGTH_SHORT).show();
+                            showToast("加入房间失败,房间已满:" + sigParms.result);
 
                         } else if (sigParms.result.equals("SUCCESS")) {
 
-                            clientManager = new ClientManager(MaxInstance, sigParms, connectionParameters, handler);
+                            clientManager.setSigParms(sigParms);
+                            clientManager.init();
 
                             //一定要在这个“死循环线程”中运行，因为后面的连接消息推送的服务器的时候，会对此线程检查
                             handler.post(new Runnable() {
@@ -483,7 +458,10 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                                         InstanceManager instanceManager = (InstanceManager) entry.getValue();
                                         instanceManager.setPeerInitiator(isPeerInitiator);
                                         //加入房间成功，开始分配资源
-                                        allocateResources(instanceManager);
+                                        if (!allocateResources(instanceManager)) {
+                                            showToast("资源分配失败，终止链接");
+                                            return;
+                                        }
 
                                         signalingParametersReady((InstanceManager) entry.getValue(), roomSize);
 
@@ -508,7 +486,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
             public void run() {
 
                 if (null == instanceManager.getPeerConnection()) {
-                    Log.e(TAG, roomId + ":Failed to Create Peer connection.");
+                    Log.e(TAG, "Failed to Create Peer connection:" + instanceManager.getLocalInstanceId());
                     return;
                 }
                 //Log.d(TAG, roomId + ":Peer connection created.");
@@ -626,11 +604,11 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                 });
 
             } else if (iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
-                reportError(instanceManager.getSigParms().roomId,
+                clientManager.reportError(instanceManager.getLocalInstanceId(),
                         "localInstanceId:" + instanceManager.getLocalInstanceId() + "ICE disconnected.");
 
             } else if (iceConnectionState == PeerConnection.IceConnectionState.FAILED) {
-                reportError(instanceManager.getSigParms().roomId,
+                clientManager.reportError(instanceManager.getLocalInstanceId(),
                         "localInstanceId:" + instanceManager.getLocalInstanceId() + "\tICE connection failed.");
             }
 
@@ -665,7 +643,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                 public void run() {
                     //Log.e(TAG, "发送本地onIceCandidate");
                     //做备份
-                    instanceManager.getLocalQueuedRemoteCandidates_backup().add(candidate);
+                    //instanceManager.getLocalQueuedRemoteCandidates_backup().add(candidate);
                     instanceManager.sendLocalIceCandidate(candidate);
                 }
             });
@@ -807,7 +785,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                         @Override
                         public void run() {
                             //做备份
-                            instanceManager.setLocalSdp_backup(localSdp);
+                            //instanceManager.setLocalSdp_backup(localSdp);
                             instanceManager.sendOfferSdp(localSdp);
                         }
                     });
@@ -842,7 +820,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                             " 加入者成功设置offer sdp：Remote SDP set succesfully");
 
                     //createMediaStream answer SDP
-                    ShowUtil.logAndToast(context, "Creating ANSWER...");
+                    //ShowUtil.logAndToast(mContext, "Creating ANSWER...");
                     // Create SDP constraints.
                     MediaConstraints sdpMediaConstraints = new MediaConstraints();
                     sdpMediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair(
@@ -859,12 +837,12 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
 
         @Override
         public void onCreateFailure(String s) {
-            reportError(instanceManager.getSigParms().roomId, "createSDP error: " + s);
+            clientManager.reportError(instanceManager.getLocalInstanceId(), "createSDP error: " + s);
         }
 
         @Override
         public void onSetFailure(String s) {
-            reportError(instanceManager.getSigParms().roomId, "setSDP error: " + s);
+            clientManager.reportError(instanceManager.getLocalInstanceId(), "setSDP error: " + s);
         }
 
 
@@ -965,7 +943,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                             });
 
                         } else {
-                            reportError(roomId, "Received answer for call initiator: " + msg);
+                            clientManager.reportError(instanceManager.getLocalInstanceId(), "Received answer for call initiator: " + msg);
                         }
                     } else if (type.equals("offer")) {
                         Log.e(TAG, "规定：WebSocket 不允许接收offer");
@@ -984,37 +962,24 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
                             });
 
                         } else {
-                            reportError(roomId, "Received offer for call receiver: " + msg);
+                            clientManager.reportError(instanceManager.getLocalInstanceId(), "Received offer for call receiver: " + msg);
                         }
                     } else if (type.equals("bye")) {
                         Log.e(TAG, "==========recieve bye!========");
-
-                        if (!instanceManager.isPeerInitiator()) {
-                            //开始执行断开连接操作
-                            instanceManager.disconnect();
-                        } else {
-                            //instanceManager.resendLocalSdp();
-                            //instanceManager.resendLocalIceCandidate();
-                        }
-                        //AppRTC_Common.map_isInitiator.put(roomId, true);
-                        //peerConnection.createOffer(sdpObserver, new MediaConstraints());
-                        //instanceManager.disconnect();
-//                        renderSetting(instanceManager.getRemoteRenderer(), false);
-//                        stack_AvailableRemoteRender.push(instanceManager.getRemoteRenderer());
-
+                        clientManager.requestConnectionAsInitiator(instanceManager.getLocalInstanceId());
 
                     } else {
-                        reportError(roomId, "Unexpected WebSocket message: " + msg);
+                        clientManager.reportError(instanceManager.getLocalInstanceId(), "Unexpected WebSocket message: " + msg);
                     }
                 } else {
                     if (errorText != null && errorText.length() > 0) {
-                        reportError(roomId, "WebSocket error message: " + errorText);
+                        clientManager.reportError("0", "WebSocket error message: " + errorText);
                     } else {
-                        reportError(roomId, "Unexpected WebSocket message: " + msg);
+                        clientManager.reportError("0", "Unexpected WebSocket message: " + msg);
                     }
                 }
             } catch (JSONException e) {
-                reportError(roomId, "WebSocket message JSON parsing error: " + e.toString());
+                clientManager.reportError("0", "WebSocket message JSON parsing error: " + e.toString());
             }
 
         }
@@ -1035,14 +1000,15 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
 
 
     // ==========================Helper functions============================
-    public static void reportError(String roomId, final String errorMessage) {
-        Log.e(TAG, "reportError: " + errorMessage);
-//
-//        if (AppRTC_Common.map_roomState.get(roomId) != ConnectionState.ERROR) {
-//            AppRTC_Common.map_roomState.put(roomId, ConnectionState.ERROR);
-//            Log.e(TAG, errorMessage);
-//        }
 
+
+    private void showToast(final String message) {
+        CallActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
 
@@ -1050,7 +1016,7 @@ public class CallActivity extends AppCompatActivity implements AppRTC_Common.ICa
     public boolean onKeyDown(int keyCode, KeyEvent event) {
 
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            Toast.makeText(context, "再按一次退出视频通话", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "再按一次退出视频通话", Toast.LENGTH_SHORT).show();
             if (ClickUtil.isFastDoubleClick()) {
                 //主动模拟人的点击动作
                 cancel_btn.performClick();

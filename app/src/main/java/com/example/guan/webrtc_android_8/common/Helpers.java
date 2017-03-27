@@ -18,7 +18,7 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.example.guan.webrtc_android_8.activity.CallActivity.reportError;
+
 
 /**
  * Created by guan on 3/18/17.
@@ -44,18 +44,18 @@ public class Helpers {
             throws IOException, JSONException {
 
         //这句话仅仅为了测试
-        url = AppRTC_Common.turnServer_URL;
+        url = AppRTC_Common.selected_turnServer_URL;
 
         LinkedList<PeerConnection.IceServer> turnServers = new LinkedList<PeerConnection.IceServer>();
         Log.d(TAG, "Request TURN from: " + url);
         HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
         connection.setDoOutput(true);
-        connection.setRequestProperty("REFERER", AppRTC_Common.WebRTC_URL);
+        connection.setRequestProperty("REFERER", AppRTC_Common.selected_WebRTC_URL);
         connection.setConnectTimeout(TURN_HTTP_TIMEOUT_MS);
         connection.setReadTimeout(TURN_HTTP_TIMEOUT_MS);
         int responseCode = connection.getResponseCode();
         if (responseCode != 200) {
-            Log.e(TAG,"======requestTurnServers FAILED========");
+            Log.e(TAG, "======requestTurnServers FAILED========");
             throw new IOException("Non-200 response when requesting TURN server from " + url + " : "
                     + connection.getHeaderField(null));
         }
@@ -146,50 +146,7 @@ public class Helpers {
         return newSdpDescription.toString();
     }
 
-    /**
-     * 本方法目的只是向服务器发送，并不注重返回的消息
-     *
-     * @param messageType
-     * @param url
-     * @param message
-     * @param roomId
-     */
-    public static void sendPostMessage(
-            final AppRTC_Common.MessageType messageType,
-            final String url,
-            final String message,
-            final String roomId) {
-        String logInfo = url;
-        if (message != null) {
-            logInfo += ". Message: " + message;
-        }
-        //Log.d(TAG, "C->GAE: " + logInfo);
-        AsyncHttpURLConnection httpConnection = new AsyncHttpURLConnection(
-                "POST", url, message, new AsyncHttpURLConnection.AsyncHttpEvents() {
-            @Override
-            public void onHttpError(String errorMessage) {
-                Log.e(TAG, "onHttpError:" + errorMessage);
-            }
 
-            @Override
-            public void onHttpComplete(String response) {
-                if (messageType == AppRTC_Common.MessageType.MESSAGE) {
-                    try {
-                        JSONObject roomJson = new JSONObject(response);
-                        String result = roomJson.getString("result");
-                        if (!result.equals("SUCCESS")) {
-                            reportError(roomId, "GAE POST error: " + result);
-                        }else {
-                            //Log.d(TAG,"sendPostMessage success");
-                        }
-                    } catch (JSONException e) {
-                        reportError(roomId, "GAE POST JSON error: " + e.toString());
-                    }
-                }
-            }
-        });
-        httpConnection.send();
-    }
 
 
     public static String createInstanceId() {

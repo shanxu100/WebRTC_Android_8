@@ -8,6 +8,7 @@ import com.example.guan.webrtc_android_8.activity.CallActivity;
 import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaStream;
@@ -17,15 +18,12 @@ import org.webrtc.SurfaceViewRenderer;
 
 import java.util.LinkedList;
 
-
-import static com.example.guan.webrtc_android_8.activity.CallActivity.reportError;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.AUDIO_CODEC_ISAC;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_LEAVE;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_MESSAGE;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_QUERY;
 import static com.example.guan.webrtc_android_8.common.AppRTC_Common.preferredVideoCodec;
 import static com.example.guan.webrtc_android_8.common.Helpers.preferCodec;
-import static com.example.guan.webrtc_android_8.common.Helpers.sendPostMessage;
 import static com.example.guan.webrtc_android_8.common.JsonHelper.jsonPut;
 import static com.example.guan.webrtc_android_8.common.JsonHelper.toJsonCandidate;
 
@@ -46,10 +44,11 @@ public class InstanceManager {
     private AppRTC_Common.MessageParameters messageParameters;
     private LinkedList<IceCandidate> queuedRemoteCandidates = new LinkedList<>();
 
-    private LinkedList<IceCandidate> localQueuedRemoteCandidates_backup = new LinkedList<>();
-    private SessionDescription localSdp_backup;
+//    private LinkedList<IceCandidate> localQueuedRemoteCandidates_backup = new LinkedList<>();
+//    private SessionDescription localSdp_backup;
 
 
+    ClientManager clientManager;
     private PeerConnection peerConnection;
     private WebSocketClient wsClient;
     private CallActivity.WSMessageEvent wsMessageEvent;
@@ -65,28 +64,28 @@ public class InstanceManager {
 
     private Handler handler;
 
-    private String TAG = AppRTC_Common.TAG_COMM + "InstanceManager";
+    private static String TAG = AppRTC_Common.TAG_COMM + "InstanceManager";
 
 
-    public InstanceManager(AppRTC_Common.RoomConnectionParameters connectionParameters,
-                           AppRTC_Common.SignalingParameters sigParms,
+    public InstanceManager(AppRTC_Common.SignalingParameters sigParms,
                            String localInstanceId,
-                           //AppRTC_Common.ICall iCall,
+                           ClientManager clientManager,
                            Handler handler) {
 
 
-        this.messageUrl = connectionParameters.roomUrl + "/" + ROOM_MESSAGE + "/" + connectionParameters.roomId
-                + "/" + sigParms.clientId + "/" + localInstanceId;
-        this.leaveUrl = connectionParameters.roomUrl + "/" + ROOM_LEAVE + "/" + connectionParameters.roomId + "/"
-                + sigParms.clientId + "/" + localInstanceId;
-        this.queryUrl = connectionParameters.roomUrl + "/" + ROOM_QUERY + "/" + connectionParameters.roomId + "/"
-                + sigParms.clientId + "/" + localInstanceId;
+        this.messageUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_MESSAGE + "/" +
+                AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
+        this.leaveUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_LEAVE + "/" +
+                AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
+        this.queryUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_QUERY + "/" +
+                AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
 
 
         this.roomState = AppRTC_Common.RoomState.CONNECTED;
 
         this.sigParms = sigParms;
         //this.iCall = iCall;
+        this.clientManager=clientManager;
         this.handler = handler;
         this.localInstanceId = localInstanceId;
 
@@ -171,14 +170,14 @@ public class InstanceManager {
     public void setQueuedRemoteCandidates(LinkedList<IceCandidate> queuedRemoteCandidates) {
         this.queuedRemoteCandidates = queuedRemoteCandidates;
     }
-
-    public SessionDescription getLocalSdp_backup() {
-        return localSdp_backup;
-    }
-
-    public void setLocalSdp_backup(SessionDescription localSdp_backup) {
-        this.localSdp_backup = localSdp_backup;
-    }
+//
+//    public SessionDescription getLocalSdp_backup() {
+//        return localSdp_backup;
+//    }
+//
+//    public void setLocalSdp_backup(SessionDescription localSdp_backup) {
+//        this.localSdp_backup = localSdp_backup;
+//    }
 
     public MediaStream getMediaStream() {
         return mediaStream;
@@ -208,9 +207,9 @@ public class InstanceManager {
         return sigParms;
     }
 
-    public LinkedList<IceCandidate> getLocalQueuedRemoteCandidates_backup() {
-        return localQueuedRemoteCandidates_backup;
-    }
+//    public LinkedList<IceCandidate> getLocalQueuedRemoteCandidates_backup() {
+//        return localQueuedRemoteCandidates_backup;
+//    }
 
     public void setRemoteInstanceId(String remoteInstanceId) {
         if (messageParameters == null) {
@@ -228,7 +227,6 @@ public class InstanceManager {
             return "";
         }
     }
-
 
     //=====================================================
 
@@ -249,7 +247,7 @@ public class InstanceManager {
             public void onHttpComplete(String response) {
 
                 messageParameters = JsonHelper.messageHttpResponseParameters(response);
-                Log.e(TAG,localInstanceId+"/"+getRemoteInstanceId());
+                Log.e(TAG, localInstanceId + "/" + getRemoteInstanceId());
                 setRemoteInstanceId(messageParameters.remoteInstanceId);
                 if (messageParameters != null) {
 
@@ -298,7 +296,7 @@ public class InstanceManager {
             sendPostMessage(AppRTC_Common.MessageType.LEAVE,
                     leaveUrl,
                     null,
-                    sigParms.roomId);
+                    localInstanceId);
         }
 
         Log.e(TAG, "Closing peer connection.");
@@ -364,7 +362,7 @@ public class InstanceManager {
             sendPostMessage(AppRTC_Common.MessageType.MESSAGE,
                     messageUrl,
                     json.toString(),
-                    sigParms.roomId);
+                    localInstanceId);
 
         } else {
             // Call receiver sends ice candidates to websocket server.
@@ -384,7 +382,7 @@ public class InstanceManager {
         JSONArray jsonArray = new JSONArray();
         for (final IceCandidate candidate : candidates) {
             //删除备份
-            localQueuedRemoteCandidates_backup.remove(candidate);
+            //localQueuedRemoteCandidates_backup.remove(candidate);
 
             jsonArray.put(toJsonCandidate(candidate));
         }
@@ -400,7 +398,7 @@ public class InstanceManager {
             sendPostMessage(AppRTC_Common.MessageType.MESSAGE,
                     messageUrl,
                     json.toString(),
-                    sigParms.roomId);
+                    localInstanceId);
 
         } else {
             // Call receiver sends ice candidates to websocket server.
@@ -482,7 +480,7 @@ public class InstanceManager {
     public void sendOfferSdp(final SessionDescription sdp) {
 
         if (roomState != AppRTC_Common.RoomState.CONNECTED) {
-            reportError(sigParms.roomId, "Sending offer SDP in non connected state.");
+            clientManager.reportError(localInstanceId, "Sending offer SDP in non connected state.");
             return;
         }
 
@@ -498,7 +496,7 @@ public class InstanceManager {
         sendPostMessage(AppRTC_Common.MessageType.MESSAGE,
                 messageUrl,
                 json.toString(),
-                sigParms.roomId);
+                localInstanceId);
     }
 
     /**
@@ -510,7 +508,7 @@ public class InstanceManager {
     public void sendAnswerSdp(final SessionDescription sdp) {
 
         //做备份
-        localSdp_backup = sdp;
+        //localSdp_backup = sdp;
 
         JSONObject json = new JSONObject();
         jsonPut(json, "sdp", sdp.description);
@@ -529,20 +527,50 @@ public class InstanceManager {
      * 答：发送的地址不一样。offer发送到messageUrl地址中，answer发送到WebSocket服务器中。而WebSocket服务器的地址是在connect/register确定的
      */
 
-    //====================================================
-    public void resendLocalSdp() {
-        if (peerInitiator) {
-            sendOfferSdp(localSdp_backup);
-        } else {
-            sendAnswerSdp(localSdp_backup);
+    //======================Helpers==============================
+    /**
+     * 本方法目的只是向服务器发送，并不注重返回的消息
+     *
+     * @param messageType
+     * @param url
+     * @param message
+     * @param localInstanceId
+     */
+    public void sendPostMessage(final AppRTC_Common.MessageType messageType,
+                                       final String url,
+                                       final String message,
+                                       final String localInstanceId) {
+        String logInfo = url;
+        if (message != null) {
+            logInfo += ". Message: " + message;
         }
-    }
+        Log.d(TAG, "localInstanceId"+localInstanceId+"\tC->GAE: " + logInfo);
 
-    public void resendLocalIceCandidate() {
-        Log.e(TAG, "localQueuedRemoteCandidates_backup.size: " + localQueuedRemoteCandidates_backup.size());
-        for (IceCandidate candidate : localQueuedRemoteCandidates_backup) {
-            sendLocalIceCandidate(candidate);
-        }
+        AsyncHttpURLConnection httpConnection = new AsyncHttpURLConnection(
+                "POST", url, message, new AsyncHttpURLConnection.AsyncHttpEvents() {
+            @Override
+            public void onHttpError(String errorMessage) {
+                Log.e(TAG, "onHttpError:" + errorMessage);
+            }
+
+            @Override
+            public void onHttpComplete(String response) {
+                if (messageType == AppRTC_Common.MessageType.MESSAGE) {
+                    try {
+                        JSONObject roomJson = new JSONObject(response);
+                        String result = roomJson.getString("result");
+                        if (!result.equals("SUCCESS")) {
+                            clientManager.reportError(localInstanceId,"GAE POST error: " + result);
+                        } else {
+                            //Log.d(TAG,"sendPostMessage success");
+                        }
+                    } catch (JSONException e) {
+                        clientManager.reportError(localInstanceId,"GAE POST JSON error: " + e.toString());
+                    }
+                }
+            }
+        });
+        httpConnection.send();
     }
 
 

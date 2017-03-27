@@ -64,25 +64,6 @@ public class JsonHelper {
     }
 
 
-    public static AppRTC_Common.BackupRoomParameters backupRoomResponseParse(String response) {
-        Log.e(TAG, "解析轮询房间服务器后返回的backup参数:" + response);
-        try {
-            JSONObject backupJson = new JSONObject(response);
-            String result = backupJson.getString("result");
-            if (result.equals("SUCCESS")) {
-//                response = backupJson.getString("params");
-//                backupJson = new JSONObject(response);
-                String backup = backupJson.getString("backup");
-                return new AppRTC_Common.BackupRoomParameters(result, backup);
-            } else {
-                return new AppRTC_Common.BackupRoomParameters(result, "");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new AppRTC_Common.BackupRoomParameters("FAILED", "");
-        }
-    }
 
     /**
      * 解析访问房间服务器后返回的参数
@@ -102,10 +83,6 @@ public class JsonHelper {
             String result = roomJson.getString("result");
             //=================
             if (result.equals("ROOM_FULL")) {
-                response = roomJson.getString("params");
-                roomJson = new JSONObject(response);
-                //String backup = roomJson.getString("backup");
-
                 Log.e(TAG, "ROOM_FULL");
                 AppRTC_Common.SignalingParameters params = new AppRTC_Common.SignalingParameters(result,
                         null, false, null, null, null, null, null, null, null);

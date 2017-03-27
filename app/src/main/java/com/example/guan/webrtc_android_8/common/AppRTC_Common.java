@@ -10,10 +10,6 @@
 
 package com.example.guan.webrtc_android_8.common;
 
-import android.util.Log;
-
-import com.example.guan.webrtc_android_8.activity.CallActivity;
-
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
@@ -60,41 +56,23 @@ public class AppRTC_Common {
     public static final String labServer_WebRTC_URL = "https://222.201.145.167";
     public static final String labServer_turnServer_URL = "https://222.201.145.167/iceconfig.php";
 
-    public static String WebRTC_URL = aliyun_WebRTC_URL;
-    public static String turnServer_URL = aliyun_turnServer_URL;
+    public static String selected_WebRTC_URL = aliyun_WebRTC_URL;
+    public static String selected_turnServer_URL = aliyun_turnServer_URL;
 
     //模式设置选项
-    public static String P_2_M="Point to Multipoint";
-    public static String M_2_M="Multipoint to Multipoint";
+    public static final String P_2_M="Point to Multipoint";
+    public static final String M_2_M="Multipoint to Multipoint";
     public static String selectedMode=M_2_M;
 
+    public static String selected_roomId;
+    public static RoomRole selected_role;
 
-    //public static final String WebRTCUrl = WebRTC_URL;
-    public static final String HTTP_ORIGIN = WebRTC_URL;
+
+    //public static final String WebRTCUrl = selected_WebRTC_URL;
+    public static final String HTTP_ORIGIN = selected_WebRTC_URL;
     public static final String TAG_COMM = "appRTC-";
 
     private static String TAG = AppRTC_Common.TAG_COMM + "AppRTC_Common";
-
-    /**
-     * Struct holding the connection parameters of an AppRTC room.
-     * 定义发起链接的参数
-     */
-    public static class RoomConnectionParameters {
-        public final String roomUrl;
-        public final String roomId;
-        //public final String roomType;
-
-        @Override
-        public String toString() {
-            return "roomUrl:" + roomUrl
-                    + "\troomId:" + roomId;
-        }
-
-        public RoomConnectionParameters(String roomUrl, String roomId) {
-            this.roomUrl = roomUrl;
-            this.roomId = roomId;
-        }
-    }
 
     /**
      * Struct holding the signaling parameters of an AppRTC room.
@@ -104,7 +82,7 @@ public class AppRTC_Common {
     public static class SignalingParameters {
         public final String result;
         public final List<PeerConnection.IceServer> iceServers;
-        //public final boolean initiator;
+        public final boolean initiator;
         public final String clientId;
         public String roomSize;
         public final String wssUrl;
@@ -118,7 +96,7 @@ public class AppRTC_Common {
                                    List<IceCandidate> iceCandidates, String roomId, String roomSize) {
             this.result = result;
             this.iceServers = iceServers;
-            //this.initiator = initiator;
+            this.initiator = initiator;
             this.clientId = clientId;
             this.roomSize = roomSize;
             this.wssUrl = wssUrl;
@@ -133,9 +111,9 @@ public class AppRTC_Common {
         public String toString() {
             return "SignalingParameters{" +
                     "iceServers=" + iceServers.get(0) +
-                    //", initiator=" + initiator +
+                    ", initiator=" + initiator +
                     ", clientId='" + clientId + '\'' +
-                    //", roomSize='" + roomSize + '\'' +
+                    ", roomSize='" + roomSize + '\'' +
                     ", wssUrl='" + wssUrl + '\'' +
                     ", wssPostUrl='" + wssPostUrl + '\'' +
                     ", offerSdp=" + offerSdp +
@@ -166,8 +144,8 @@ public class AppRTC_Common {
         @Override
         public String toString() {
             return "MessageParameters{" +
-//                    "roomID=" + roomId +
-//                    ", clientId='" + clientId + '\'' +
+                    "roomID=" + roomId +
+                    ", clientId='" + clientId + '\'' +
                     ", remoteInstanceId=" + remoteInstanceId +
                     ", offerSdp=" + offerSdp +
                     ", iceCandidates=" + iceCandidates +
@@ -177,19 +155,6 @@ public class AppRTC_Common {
 
 
     //=========================================
-
-    /**
-     * 定义从服务器轮询后得到的新的房间号
-     */
-    public static class BackupRoomParameters {
-        public final String result;
-        public final String backup;
-
-        public BackupRoomParameters(String result, String backup) {
-            this.result = result;
-            this.backup = backup;
-        }
-    }
 
 
     public interface ICall {

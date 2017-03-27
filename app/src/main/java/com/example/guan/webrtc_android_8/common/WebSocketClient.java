@@ -27,8 +27,6 @@ import de.tavendo.autobahn.WebSocket;
 import de.tavendo.autobahn.WebSocketConnection;
 import de.tavendo.autobahn.WebSocketException;
 
-import static com.example.guan.webrtc_android_8.activity.CallActivity.reportError;
-import static com.example.guan.webrtc_android_8.common.JsonHelper.jsonPut;
 
 
 /**
@@ -124,10 +122,10 @@ public class WebSocketClient {
             Log.d(TAG, "Success to Connect WebSocket!");
         } catch (URISyntaxException e) {
             e.printStackTrace();
-            reportError(roomID, "URI error: " + e.getMessage());
+            //reportError(roomID, "URI error: " + e.getMessage());
         } catch (WebSocketException e) {
             e.printStackTrace();
-            reportError(roomID, "WebSocket connection error: " + e.getMessage());
+            //reportError(roomID, "WebSocket connection error: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -157,7 +155,8 @@ public class WebSocketClient {
             wsSendQueue.clear();
             Log.e(TAG, "Success to Register WebSocket!");
         } catch (JSONException e) {
-            reportError(roomID, "WebSocket register JSON error: " + e.getMessage());
+            e.printStackTrace();
+            //reportError(roomID, "WebSocket register JSON error: " + e.getMessage());
         }
     }
 
@@ -190,7 +189,8 @@ public class WebSocketClient {
                     Log.d(TAG, "C->WSS: " + message);
                     ws.sendTextMessage(message);
                 } catch (JSONException e) {
-                    reportError(roomID, "WebSocket send JSON error: " + e.getMessage());
+                    //reportError(roomID, "WebSocket send JSON error: " + e.getMessage());
+                    e.printStackTrace();
                 }
                 break;
         }
@@ -254,7 +254,8 @@ public class WebSocketClient {
                 new AsyncHttpURLConnection(method, postUrl, message, new AsyncHttpURLConnection.AsyncHttpEvents() {
                     @Override
                     public void onHttpError(String errorMessage) {
-                        reportError(roomID, "WS " + method + " error: " + errorMessage);
+                        //reportError(roomID, "WS " + method + " error: " + errorMessage);
+                        Log.e(TAG,"WS " + method + " error: " + errorMessage);
                     }
 
                     @Override

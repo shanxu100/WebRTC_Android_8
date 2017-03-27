@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
                 roomid = roomid_et.getText().toString().trim();
 
-                if (AppRTC_Common.WebRTC_URL.equals("") || AppRTC_Common.turnServer_URL.equals("")) {
+                if (AppRTC_Common.selected_WebRTC_URL.equals("") || AppRTC_Common.selected_turnServer_URL.equals("")) {
                     Toast.makeText(mContext, "请选择服务器", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -116,11 +116,12 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 Intent intent = new Intent(MainActivity.this, CallActivity.class);
-                intent.putExtra("roomurl", AppRTC_Common.WebRTC_URL);
-                intent.putExtra("roomid", roomid);
-                intent.putExtra("role", role);
-                Log.d(TAG, "roomurl:" + AppRTC_Common.WebRTC_URL + "\troomid:" + roomid +
-                        "\trole:" + role + "\tmode: " + AppRTC_Common.selectedMode);
+                AppRTC_Common.selected_roomId = roomid;
+                AppRTC_Common.selected_role = role;
+                Log.d(TAG, "roomurl:" + AppRTC_Common.selected_WebRTC_URL +
+                        "\troomid:" + AppRTC_Common.selected_roomId +
+                        "\trole:" + AppRTC_Common.selected_role +
+                        "\tmode: " + AppRTC_Common.selectedMode);
 
 
                 //startActivity(intent);
@@ -137,11 +138,11 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClickRadioButton(ServerSettingDialog.SelectedServer s) {
                         if (s == ServerSettingDialog.SelectedServer.Lab) {
-                            AppRTC_Common.WebRTC_URL = AppRTC_Common.labServer_WebRTC_URL;
-                            AppRTC_Common.turnServer_URL = AppRTC_Common.labServer_turnServer_URL;
+                            AppRTC_Common.selected_WebRTC_URL = AppRTC_Common.labServer_WebRTC_URL;
+                            AppRTC_Common.selected_turnServer_URL = AppRTC_Common.labServer_turnServer_URL;
                         } else if (s == ServerSettingDialog.SelectedServer.Aliyun) {
-                            AppRTC_Common.WebRTC_URL = AppRTC_Common.aliyun_WebRTC_URL;
-                            AppRTC_Common.turnServer_URL = AppRTC_Common.aliyun_turnServer_URL;
+                            AppRTC_Common.selected_WebRTC_URL = AppRTC_Common.aliyun_WebRTC_URL;
+                            AppRTC_Common.selected_turnServer_URL = AppRTC_Common.aliyun_turnServer_URL;
                         }
 
                     }
@@ -149,14 +150,14 @@ public class MainActivity extends AppCompatActivity {
                 dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        selectedServer_tv.setText(AppRTC_Common.WebRTC_URL);
+                        selectedServer_tv.setText(AppRTC_Common.selected_WebRTC_URL);
 
                     }
                 });
                 dialog.show();
             }
         });
-        selectedServer_tv.setText(AppRTC_Common.WebRTC_URL);
+        selectedServer_tv.setText(AppRTC_Common.selected_WebRTC_URL);
 
 
         modeSetting_imgbtn.setOnClickListener(new View.OnClickListener() {
