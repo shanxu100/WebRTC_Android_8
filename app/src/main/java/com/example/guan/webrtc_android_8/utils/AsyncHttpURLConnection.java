@@ -8,26 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-/**
- * 使用示例
- * <p>
- * <p>
- * AsyncHttpURLConnection httpConnection =
- * new AsyncHttpURLConnection("POST", Url, null, new AsyncHttpEvents() {
- *
- * @Override public void onHttpError(String errorMessage) {
- * // 连接失败
- * Log.e(TAG, "Room connection error: " + errorMessage);
- * }
- * @Override public void onHttpComplete(String response) {
- * //连接成功，开始解析返回的参数……
- * }
- * });
- * <p>
- * //发出命令，开始连接
- * httpConnection.send();
- */
-
 package com.example.guan.webrtc_android_8.utils;
 
 
