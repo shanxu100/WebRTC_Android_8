@@ -10,6 +10,9 @@
 
 package com.example.guan.webrtc_android_8.common;
 
+import android.os.Handler;
+import android.os.HandlerThread;
+
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
@@ -73,6 +76,7 @@ public class AppRTC_Common {
     public static final String TAG_COMM = "appRTC-";
 
     private static String TAG = AppRTC_Common.TAG_COMM + "AppRTC_Common";
+
 
     /**
      * Struct holding the signaling parameters of an AppRTC room.

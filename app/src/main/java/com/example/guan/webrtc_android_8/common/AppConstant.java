@@ -9,6 +9,9 @@ public class AppConstant {
     public static int SCRRENWIDTH;
     public static int SCREENHEIGHT;
 
+    public static int RENDERERWIDTH;
+    public static int RENDERERHEIGHT;
+
     public static final int MY_PERMISSIONS_REQUEST = 3000;
     public static final int MAINACTIVITY_REQUEST_CODE=2000;
 

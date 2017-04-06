@@ -2,7 +2,6 @@ package com.example.guan.webrtc_android_8.common;
 
 import android.util.Log;
 
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,13 +9,7 @@ import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.LinkedList;
-import java.util.Scanner;
-import java.util.concurrent.ExecutionException;
 
 import static com.example.guan.webrtc_android_8.common.Helpers.requestTurnServers;
 

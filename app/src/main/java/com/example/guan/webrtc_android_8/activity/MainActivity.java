@@ -280,5 +280,6 @@ public class MainActivity extends AppCompatActivity {
         //super.onActivityResult(requestCode, resultCode, data);
         //根据requestCode，resultCode判断后，再进行操作。此处省略
         roomid_et.getText().clear();
+        Log.e(TAG,"MainActivity finished successfully");
     }
 }

@@ -1,8 +1,9 @@
 package com.example.guan.webrtc_android_8.common;
 
+import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
+import android.widget.ImageView;
 
 import com.example.guan.webrtc_android_8.activity.CallActivity;
 import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
@@ -34,7 +35,7 @@ import static com.example.guan.webrtc_android_8.common.JsonHelper.toJsonCandidat
 public class InstanceManager {
 
     private String localInstanceId;
-    //private String remoteInstanceId;//设置到了MessageParameters中
+    private String remoteInstanceId;//设置到了MessageParameters中
 
     private String messageUrl;
     private String leaveUrl;
@@ -44,11 +45,7 @@ public class InstanceManager {
     private AppRTC_Common.MessageParameters messageParameters;
     private LinkedList<IceCandidate> queuedRemoteCandidates = new LinkedList<>();
 
-//    private LinkedList<IceCandidate> localQueuedRemoteCandidates_backup = new LinkedList<>();
-//    private SessionDescription localSdp_backup;
-
-
-    ClientManager clientManager;
+    private ClientManager clientManager;
     private PeerConnection peerConnection;
     private WebSocketClient wsClient;
     private CallActivity.WSMessageEvent wsMessageEvent;
@@ -56,22 +53,30 @@ public class InstanceManager {
     private CallActivity.SDPObserver sdpObserver;
 
     private SurfaceViewRenderer remoteRenderer;
+    private ImageView mute_imgv;
     private MediaStream mediaStream;
 
     private boolean peerInitiator;
+    private boolean isMute;
+    private boolean isClosed;
 
     //AppRTC_Common.ICall iCall;
 
     private Handler handler;
 
+    private Context mContext;
+
+
     private static String TAG = AppRTC_Common.TAG_COMM + "InstanceManager";
 
 
-    public InstanceManager(AppRTC_Common.SignalingParameters sigParms,
+    public InstanceManager(Context mContext,
+                           AppRTC_Common.SignalingParameters sigParms,
                            String localInstanceId,
                            ClientManager clientManager,
                            Handler handler) {
 
+        this.mContext = mContext;
 
         this.messageUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_MESSAGE + "/" +
                 AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
@@ -85,7 +90,7 @@ public class InstanceManager {
 
         this.sigParms = sigParms;
         //this.iCall = iCall;
-        this.clientManager=clientManager;
+        this.clientManager = clientManager;
         this.handler = handler;
         this.localInstanceId = localInstanceId;
 
@@ -147,6 +152,14 @@ public class InstanceManager {
         this.remoteRenderer = remoteRenderer;
     }
 
+    public ImageView getMute_imgv() {
+        return mute_imgv;
+    }
+
+    public void setMute_imgv(ImageView mute_imgv) {
+        this.mute_imgv = mute_imgv;
+    }
+
     public AppRTC_Common.RoomState getRoomState() {
         return roomState;
     }
@@ -170,14 +183,6 @@ public class InstanceManager {
     public void setQueuedRemoteCandidates(LinkedList<IceCandidate> queuedRemoteCandidates) {
         this.queuedRemoteCandidates = queuedRemoteCandidates;
     }
-//
-//    public SessionDescription getLocalSdp_backup() {
-//        return localSdp_backup;
-//    }
-//
-//    public void setLocalSdp_backup(SessionDescription localSdp_backup) {
-//        this.localSdp_backup = localSdp_backup;
-//    }
 
     public MediaStream getMediaStream() {
         return mediaStream;
@@ -195,7 +200,23 @@ public class InstanceManager {
         this.peerInitiator = peerInitiator;
     }
 
-//===============================
+    public boolean isMute() {
+        return isMute;
+    }
+
+    public void setMute(boolean mute) {
+        isMute = mute;
+    }
+
+    public boolean isClosed() {
+        return isClosed;
+    }
+
+    public void setClosed(boolean closed) {
+        isClosed = closed;
+    }
+
+    //===============================
 
 
     public String getLocalInstanceId() {
@@ -212,20 +233,27 @@ public class InstanceManager {
 //    }
 
     public void setRemoteInstanceId(String remoteInstanceId) {
-        if (messageParameters == null) {
-            messageParameters = new AppRTC_Common.MessageParameters(sigParms.roomId, sigParms.clientId, remoteInstanceId,
-                    null, null);
-        } else {
-            messageParameters.remoteInstanceId = remoteInstanceId;
-        }
+//        if (messageParameters == null) {
+//            //这种初始化方式有问题。。。。。。以后再商榷
+//            messageParameters = new AppRTC_Common.MessageParameters(sigParms.roomId,
+//                    sigParms.clientId,
+//                    remoteInstanceId,
+//                    null, null);
+//        } else {
+//            messageParameters.remoteInstanceId = remoteInstanceId;
+//        }
+        this.remoteInstanceId = remoteInstanceId;
     }
 
     public String getRemoteInstanceId() {
-        if (messageParameters != null) {
-            return messageParameters.remoteInstanceId;
-        } else {
-            return "";
-        }
+//        if (remoteInstanceId != null) {
+//            return remoteInstanceId;
+//        } else if (messageParameters != null) {
+//            return messageParameters.remoteInstanceId;
+//        } else {
+//            return "";
+//        }
+        return remoteInstanceId;
     }
 
     //=====================================================
@@ -301,26 +329,20 @@ public class InstanceManager {
 
         Log.e(TAG, "Closing peer connection.");
         if (peerConnection != null) {
-            //peerConnection.removeStream(mediaStream);
+            peerConnection.removeStream(mediaStream);
             peerConnection.dispose();
         }
 
         Log.e(TAG, "====Closing Remote Render===");
         if (remoteRenderer != null) {
             //n人视频，会创建n-1个remoteRender。每个对象都要release
-            remoteRenderer.release();
+            //remoteRenderer.clearAnimation();
         }
 
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                WebSocketSendBye();
-            }
-        });
 
         Log.e(TAG, "=====Closing mediaStream.======");
         if (mediaStream != null) {
-            mediaStream.dispose();
+            //mediaStream.dispose();
             mediaStream = null;
         }
 
@@ -328,16 +350,64 @@ public class InstanceManager {
 
     }
 
-    private void WebSocketSendBye() {
-
+    public void sendByeToPeer() {
         Log.e(TAG, "======WebSocketSendBye======");
-        JSONObject json = new JSONObject();
-        jsonPut(json, "type", "bye");
-        jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
-        jsonPut(json, "senderId", localInstanceId);
-        Log.e(TAG, "WebSocket Send Bye: " + json.toString());
-        wsClient.send(json.toString());
+        try {
+            JSONObject json = new JSONObject();
+            jsonPut(json, "type", "bye");
+            jsonPut(json, "receiverId", remoteInstanceId);
+            jsonPut(json, "senderId", localInstanceId);
+            Log.e(TAG, "WebSocket Send Bye: " + json.toString());
+            wsClient.send(json.toString());
+
+            isClosed = true;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
+    /**
+     * 静音开关
+     * 设置本地音效开关，并通知远端
+     */
+    public void sendAudioSwitch() {
+
+//        if (remoteInstanceId == null || remoteInstanceId.equals("")) {
+//            return;
+//        }
+//
+//        if (isMute) {
+//            mediaStream.audioTracks.get(0).setEnabled(true);
+//            //mediaStream.videoTracks.get(0).setEnabled(true);
+//            isMute = false;
+//        } else {
+//            mediaStream.audioTracks.get(0).setEnabled(false);
+//            //mediaStream.videoTracks.get(0).setEnabled(false);
+//            isMute = true;
+//        }
+
+        final JSONObject json = new JSONObject();
+        jsonPut(json, "switch", isMute);
+        jsonPut(json, "type", "muteswitch");
+        jsonPut(json, "receiverId", remoteInstanceId);
+        jsonPut(json, "senderId", localInstanceId);
+        Log.e(TAG, "send changeAndSendAudioSwitch: localInstanceId:" + localInstanceId +
+                "\tremote: " + remoteInstanceId);
+
+        wsClient.send(json.toString());
+
+
+    }
+
+
+    /**
+     * 暂停视频画面
+     */
+    public void mediastreamStill() {
+
+    }
+
 
     //==============配合PCObserver使用的方法===========================
     // Send Ice candidate to the other participant.
@@ -366,7 +436,7 @@ public class InstanceManager {
 
         } else {
             // Call receiver sends ice candidates to websocket server.
-            jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
+            jsonPut(json, "receiverId", remoteInstanceId);
             jsonPut(json, "senderId", localInstanceId);
             wsClient.send(json.toString());
         }
@@ -402,7 +472,7 @@ public class InstanceManager {
 
         } else {
             // Call receiver sends ice candidates to websocket server.
-            jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
+            jsonPut(json, "receiverId", remoteInstanceId);
             jsonPut(json, "senderId", localInstanceId);
             wsClient.send(json.toString());
         }
@@ -455,7 +525,13 @@ public class InstanceManager {
 
     public void setRemoteDescription(final SessionDescription sdp) {
 
-        Log.e(TAG, "localInstanceId:" + localInstanceId + "remoteInstanceId:" + messageParameters.remoteInstanceId +
+//        if (sdp==null)
+//        {
+//            peerConnection.setRemoteDescription(sdpObserver, null);
+//            return;
+//        }
+
+        Log.e(TAG, "localInstanceId:" + localInstanceId + "remoteInstanceId:" + remoteInstanceId +
                 "===setRemoteDescription===");
         if (peerConnection == null) {
             return;
@@ -513,9 +589,9 @@ public class InstanceManager {
         JSONObject json = new JSONObject();
         jsonPut(json, "sdp", sdp.description);
         jsonPut(json, "type", "answer");
-        jsonPut(json, "receiverId", messageParameters.remoteInstanceId);
+        jsonPut(json, "receiverId", remoteInstanceId);
         jsonPut(json, "senderId", localInstanceId);
-        Log.e(TAG, "send AnswerSdp: localInstanceId:" + localInstanceId + "\tremote: " + messageParameters.remoteInstanceId);
+        Log.e(TAG, "send AnswerSdp: localInstanceId:" + localInstanceId + "\tremote: " + remoteInstanceId);
 
         wsClient.send(json.toString());
 
@@ -528,6 +604,7 @@ public class InstanceManager {
      */
 
     //======================Helpers==============================
+
     /**
      * 本方法目的只是向服务器发送，并不注重返回的消息
      *
@@ -537,14 +614,14 @@ public class InstanceManager {
      * @param localInstanceId
      */
     public void sendPostMessage(final AppRTC_Common.MessageType messageType,
-                                       final String url,
-                                       final String message,
-                                       final String localInstanceId) {
+                                final String url,
+                                final String message,
+                                final String localInstanceId) {
         String logInfo = url;
         if (message != null) {
             logInfo += ". Message: " + message;
         }
-        Log.d(TAG, "localInstanceId"+localInstanceId+"\tC->GAE: " + logInfo);
+        Log.d(TAG, "localInstanceId" + localInstanceId + "\tC->GAE: " + logInfo);
 
         AsyncHttpURLConnection httpConnection = new AsyncHttpURLConnection(
                 "POST", url, message, new AsyncHttpURLConnection.AsyncHttpEvents() {
@@ -560,12 +637,12 @@ public class InstanceManager {
                         JSONObject roomJson = new JSONObject(response);
                         String result = roomJson.getString("result");
                         if (!result.equals("SUCCESS")) {
-                            clientManager.reportError(localInstanceId,"GAE POST error: " + result);
+                            clientManager.reportError(localInstanceId, "GAE POST error: " + result);
                         } else {
                             //Log.d(TAG,"sendPostMessage success");
                         }
                     } catch (JSONException e) {
-                        clientManager.reportError(localInstanceId,"GAE POST JSON error: " + e.toString());
+                        clientManager.reportError(localInstanceId, "GAE POST JSON error: " + e.toString());
                     }
                 }
             }

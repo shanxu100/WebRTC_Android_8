@@ -13,7 +13,6 @@ package com.example.guan.webrtc_android_8.common;
 import android.os.Handler;
 import android.util.Log;
 
-
 import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
 
 import org.json.JSONException;
@@ -26,7 +25,6 @@ import java.util.LinkedList;
 import de.tavendo.autobahn.WebSocket;
 import de.tavendo.autobahn.WebSocketConnection;
 import de.tavendo.autobahn.WebSocketException;
-
 
 
 /**
@@ -57,8 +55,6 @@ public class WebSocketClient {
     // WebSocket send queue. Messages are added to the queue when WebSocket
     // client is not registered and are consumed in register() call.
     private final LinkedList<String> wsSendQueue;
-
-
 
 
     /**
@@ -211,7 +207,6 @@ public class WebSocketClient {
             //send("{\"type\": \"bye\"}");
 
 
-
             state = WebSocketConnectionState.CONNECTED;
             // Send http DELETE to http WebSocket server.
             sendWSSMessage("DELETE", "");
@@ -255,7 +250,7 @@ public class WebSocketClient {
                     @Override
                     public void onHttpError(String errorMessage) {
                         //reportError(roomID, "WS " + method + " error: " + errorMessage);
-                        Log.e(TAG,"WS " + method + " error: " + errorMessage);
+                        Log.e(TAG, "WS " + method + " error: " + errorMessage);
                     }
 
                     @Override
@@ -270,7 +265,7 @@ public class WebSocketClient {
     private void checkIfCalledOnValidThread() {
 
         if (Thread.currentThread() != handler.getLooper().getThread()) {
-            Log.e(TAG,"WebSocket method is not called on valid thread");
+            Log.e(TAG, "WebSocket method is not called on valid thread");
             throw new IllegalStateException("WebSocket method is not called on valid thread");
         }
     }
@@ -305,15 +300,16 @@ public class WebSocketClient {
                 closeEvent = true;
                 closeEventLock.notify();
             }
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (state != WebSocketConnectionState.CLOSED) {
-                        state = WebSocketConnectionState.CLOSED;
-                        events.onWebSocketClose();
-                    }
-                }
-            });
+
+//            handler.post(new Runnable() {
+//                @Override
+//                public void run() {
+            if (state != WebSocketConnectionState.CLOSED) {
+                state = WebSocketConnectionState.CLOSED;
+                events.onWebSocketClose();
+            }
+//                }
+//            });
         }
 
         /**
@@ -325,6 +321,7 @@ public class WebSocketClient {
         public void onTextMessage(String payload) {
             Log.d(TAG, "WSS->C: " + payload);
             final String message = payload;
+
             handler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -334,6 +331,7 @@ public class WebSocketClient {
                     }
                 }
             });
+
         }
 
         @Override
@@ -344,7 +342,6 @@ public class WebSocketClient {
         public void onBinaryMessage(byte[] payload) {
         }
     }
-
 
 
 }

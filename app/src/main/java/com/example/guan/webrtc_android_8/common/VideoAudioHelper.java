@@ -3,6 +3,8 @@ package com.example.guan.webrtc_android_8.common;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.guan.webrtc_android_8.common.AppRTC_Common;
+
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.Camera2Enumerator;
