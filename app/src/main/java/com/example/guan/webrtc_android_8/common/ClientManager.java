@@ -5,6 +5,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
+
 import org.webrtc.MediaConstraints;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
@@ -13,6 +15,7 @@ import org.webrtc.SurfaceViewRenderer;
 import java.util.HashMap;
 import java.util.Stack;
 
+import static com.example.guan.webrtc_android_8.common.AppRTC_Common.ROOM_LEAVE;
 import static com.example.guan.webrtc_android_8.common.Helpers.createInstanceId;
 
 /**
@@ -31,7 +34,8 @@ public class ClientManager {
     private HashMap<String, InstanceManager> map_instaces = new HashMap<>();
 
     private Stack<SurfaceViewRenderer> stack_AvailableRemoteRender = new Stack<>();
-    private Stack<ImageView> stack_AvailableMuteImgview = new Stack<>();
+    private Stack<ImageView> stack_AvailableSpeakerImgview = new Stack<>();
+    private Stack<ImageView> stack_AvailableMicrophoneImgview = new Stack<>();
 
 
     private Context mContext;
@@ -67,8 +71,13 @@ public class ClientManager {
         return stack_AvailableRemoteRender;
     }
 
-    public Stack<ImageView> getStack_AvailableMuteImgview() {
-        return stack_AvailableMuteImgview;
+
+    public Stack<ImageView> getStack_AvailableSpeakerImgview() {
+        return stack_AvailableSpeakerImgview;
+    }
+
+    public Stack<ImageView> getStack_AvailableMicrophoneImgview() {
+        return stack_AvailableMicrophoneImgview;
     }
 
     public PeerConnectionFactory getFactory() {
@@ -149,16 +158,19 @@ public class ClientManager {
         }
     }
 
-    public ImageView getAvailableImageView(){
-        return stack_AvailableMuteImgview.pop();
+    public ImageView getAvailableSpeakerImgV() {
+        return stack_AvailableSpeakerImgview.pop();
+    }
+
+    public ImageView getAvailableMicrophoneImgV() {
+        return stack_AvailableMicrophoneImgview.pop();
     }
 
 
     public void recreatePeerConnection(InstanceManager instanceManager) {
         String localInstanceId = instanceManager.getLocalInstanceId();
 
-        if (rtcConfig==null)
-        {
+        if (rtcConfig == null) {
             //根据信令服务器传回来的iceserver参数，生成PeerConnection的配置
             rtcConfig = new PeerConnection.RTCConfiguration(sigParms.iceServers);
             // TCP candidates are only useful when connecting to a server that supports
@@ -187,6 +199,25 @@ public class ClientManager {
     }
 
 
+    public void leaveRoomServer() {
+        String leaveUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_LEAVE + "/" +
+                AppRTC_Common.selected_roomId + "/" + sigParms.clientId;
+
+        AsyncHttpURLConnection httpURLConnection = new AsyncHttpURLConnection("POST",
+                leaveUrl, "", new AsyncHttpURLConnection.AsyncHttpEvents() {
+            @Override
+            public void onHttpError(String errorMessage) {
+                Log.e(TAG, "网络链接失败。请检查网络连接！");
+            }
+
+            @Override
+            public void onHttpComplete(String response) {
+                Log.d(TAG, response.toString());
+            }
+        });
+
+        httpURLConnection.send();
+    }
 
     /**
      * 如果走到这里，说明该InstanceManager维持的链接已死。

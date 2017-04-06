@@ -22,6 +22,8 @@ android {
         jniLibs.srcDir 'libs'
         jni.srcDirs = [] //disable automatic ndk-build call
     }
+
+
 }
 
 dependencies {
@@ -31,6 +33,9 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:24.2.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    // https://mvnrepository.com/artifact/io.pristine/libjingle-peerconnection
+    //compile group: 'io.pristine', name: 'libjingle-peerconnection', version: '6896'
+    //compile 'io.pristine:libjingle:11139@aar'
     testCompile 'junit:junit:4.12'
 
     compile files('libs/autobanh.jar')

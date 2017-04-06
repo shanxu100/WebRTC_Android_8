@@ -10,7 +10,7 @@ import org.webrtc.AudioTrack;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraVideoCapturer;
-import org.webrtc.Logging;
+
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnectionFactory;
@@ -142,10 +142,10 @@ public class VideoAudioHelper {
         final String[] deviceNames = enumerator.getDeviceNames();
 
         // First, try to find front facing camera
-        Logging.d(TAG, "Looking for front facing cameras.");
+        //Logging.d(TAG, "Looking for front facing cameras.");
         for (String deviceName : deviceNames) {
             if (enumerator.isFrontFacing(deviceName)) {
-                Logging.e(TAG, "Creating front facing camera capturer.");
+                //Logging.e(TAG, "Creating front facing camera capturer.");
                 videoCapturer = enumerator.createCapturer(deviceName, null);
                 if (videoCapturer != null) {
                     return videoCapturer;
@@ -154,10 +154,10 @@ public class VideoAudioHelper {
         }
 
         // Front facing camera not found, try something else
-        Logging.d(TAG, "Looking for other cameras.");
+        //Logging.d(TAG, "Looking for other cameras.");
         for (String deviceName : deviceNames) {
             if (!enumerator.isFrontFacing(deviceName)) {
-                Logging.e(TAG, "Creating other camera capturer.");
+                //Logging.e(TAG, "Creating other camera capturer.");
                 videoCapturer = enumerator.createCapturer(deviceName, null);
 
                 if (videoCapturer != null) {
@@ -176,21 +176,24 @@ public class VideoAudioHelper {
 //                mediaStream.dispose();
 //                mediaStream = null;
 //            }
+        if (factory != null ) {
+            //factory.stopAecDump();
+        }
 
         Log.e(TAG, "Close video audio helper");
         try {
 
-            Log.d(TAG, "Closing video source.");
+            Log.e(TAG, "Closing video source.");
             if (videoSource != null) {
                 videoSource.dispose();
                 videoSource = null;
             }
-            Log.d(TAG, "Closing audio source.");
+            Log.e(TAG, "Closing audio source.");
             if (audioSource != null) {
                 audioSource.dispose();
                 audioSource = null;
             }
-            Log.d(TAG, "Stopping capture.");
+            Log.e(TAG, "Stopping capture.");
             if (videoCapturer != null) {
                 try {
                     videoCapturer.stopCapture();
@@ -200,7 +203,7 @@ public class VideoAudioHelper {
                 videoCapturer.dispose();
                 videoCapturer = null;
             }
-            Log.d(TAG, "Close video audio helper——DONE");
+            Log.e(TAG, "Close video audio helper——DONE");
 
         } catch (Exception e) {
             e.printStackTrace();

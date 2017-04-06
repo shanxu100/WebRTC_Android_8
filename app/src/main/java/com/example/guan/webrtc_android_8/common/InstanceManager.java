@@ -38,7 +38,7 @@ public class InstanceManager {
     private String remoteInstanceId;//设置到了MessageParameters中
 
     private String messageUrl;
-    private String leaveUrl;
+    //private String leaveUrl;
     private String queryUrl;
     private AppRTC_Common.RoomState roomState;
     private AppRTC_Common.SignalingParameters sigParms;
@@ -54,11 +54,15 @@ public class InstanceManager {
 
     private SurfaceViewRenderer remoteRenderer;
     private ImageView mute_imgv;
+    private ImageView speaker_imgv;
+    private ImageView microphone_imgv;
     private MediaStream mediaStream;
 
     private boolean peerInitiator;
     private boolean isMute;
     private boolean isClosed;
+    private boolean localAudioState=true;
+    private boolean remoteAudioState=true;
 
     //AppRTC_Common.ICall iCall;
 
@@ -80,8 +84,9 @@ public class InstanceManager {
 
         this.messageUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_MESSAGE + "/" +
                 AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
-        this.leaveUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_LEAVE + "/" +
-                AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
+
+        //this.leaveUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_LEAVE + "/" + AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
+
         this.queryUrl = AppRTC_Common.selected_WebRTC_URL + "/" + ROOM_QUERY + "/" +
                 AppRTC_Common.selected_roomId + "/" + sigParms.clientId + "/" + localInstanceId;
 
@@ -101,14 +106,11 @@ public class InstanceManager {
          *  每个客户端，即使进入同一个房间（即输入同一个房间号roomId），但是信令服务器返回的clientId也是不同的。
          */
         Log.d(TAG, "Message URL: " + this.messageUrl);
-        Log.d(TAG, "Leave URL: " + this.leaveUrl);
+        //Log.d(TAG, "Leave URL: " + this.leaveUrl);
         Log.d(TAG, "Query URL: " + this.queryUrl);
 
     }
 
-    private void initParams() {
-
-    }
     //======================
 
     public PeerConnection getPeerConnection() {
@@ -158,6 +160,22 @@ public class InstanceManager {
 
     public void setMute_imgv(ImageView mute_imgv) {
         this.mute_imgv = mute_imgv;
+    }
+
+    public ImageView getSpeaker_imgv() {
+        return speaker_imgv;
+    }
+
+    public void setSpeaker_imgv(ImageView speaker_imgv) {
+        this.speaker_imgv = speaker_imgv;
+    }
+
+    public ImageView getMicrophone_imgv() {
+        return microphone_imgv;
+    }
+
+    public void setMicrophone_imgv(ImageView microphone_imgv) {
+        this.microphone_imgv = microphone_imgv;
     }
 
     public AppRTC_Common.RoomState getRoomState() {
@@ -216,6 +234,8 @@ public class InstanceManager {
         isClosed = closed;
     }
 
+
+
     //===============================
 
 
@@ -228,34 +248,23 @@ public class InstanceManager {
         return sigParms;
     }
 
-//    public LinkedList<IceCandidate> getLocalQueuedRemoteCandidates_backup() {
-//        return localQueuedRemoteCandidates_backup;
-//    }
-
     public void setRemoteInstanceId(String remoteInstanceId) {
-//        if (messageParameters == null) {
-//            //这种初始化方式有问题。。。。。。以后再商榷
-//            messageParameters = new AppRTC_Common.MessageParameters(sigParms.roomId,
-//                    sigParms.clientId,
-//                    remoteInstanceId,
-//                    null, null);
-//        } else {
-//            messageParameters.remoteInstanceId = remoteInstanceId;
-//        }
+
         this.remoteInstanceId = remoteInstanceId;
     }
 
     public String getRemoteInstanceId() {
-//        if (remoteInstanceId != null) {
-//            return remoteInstanceId;
-//        } else if (messageParameters != null) {
-//            return messageParameters.remoteInstanceId;
-//        } else {
-//            return "";
-//        }
+
         return remoteInstanceId;
     }
 
+    public boolean isLocalAudioState() {
+        return localAudioState;
+    }
+
+    public boolean isRemoteAudioState() {
+        return remoteAudioState;
+    }
     //=====================================================
 
     /**
@@ -314,30 +323,11 @@ public class InstanceManager {
      * 断开链接
      */
     public void disconnect() {
-        Log.e(TAG, "===========================Disconnect==================");
+        Log.e(TAG, "========Disconnect=======");
 
         //disconnectRoomForInstance();
 
         Log.e(TAG, "Closing room: " + sigParms.roomId + "\tCloseing instance: " + localInstanceId + "\tRoom state: " + roomState);
-        if (roomState == AppRTC_Common.RoomState.CONNECTED) {
-            //和房间服务器断开链接
-            sendPostMessage(AppRTC_Common.MessageType.LEAVE,
-                    leaveUrl,
-                    null,
-                    localInstanceId);
-        }
-
-        Log.e(TAG, "Closing peer connection.");
-        if (peerConnection != null) {
-            peerConnection.removeStream(mediaStream);
-            peerConnection.dispose();
-        }
-
-        Log.e(TAG, "====Closing Remote Render===");
-        if (remoteRenderer != null) {
-            //n人视频，会创建n-1个remoteRender。每个对象都要release
-            //remoteRenderer.clearAnimation();
-        }
 
 
         Log.e(TAG, "=====Closing mediaStream.======");
@@ -346,7 +336,12 @@ public class InstanceManager {
             mediaStream = null;
         }
 
-        //iCall.onClose(remoteRenderer, roomId);
+        Log.e(TAG, "Closing peer connection.");
+        if (peerConnection != null) {
+            //peerConnection.dispose();
+            peerConnection.close();
+            peerConnection = null;
+        }
 
     }
 
@@ -373,19 +368,6 @@ public class InstanceManager {
      */
     public void sendAudioSwitch() {
 
-//        if (remoteInstanceId == null || remoteInstanceId.equals("")) {
-//            return;
-//        }
-//
-//        if (isMute) {
-//            mediaStream.audioTracks.get(0).setEnabled(true);
-//            //mediaStream.videoTracks.get(0).setEnabled(true);
-//            isMute = false;
-//        } else {
-//            mediaStream.audioTracks.get(0).setEnabled(false);
-//            //mediaStream.videoTracks.get(0).setEnabled(false);
-//            isMute = true;
-//        }
 
         final JSONObject json = new JSONObject();
         jsonPut(json, "switch", isMute);
@@ -400,6 +382,26 @@ public class InstanceManager {
 
     }
 
+
+    public void changeLocalAudioSwitch(boolean state) {
+        localAudioState=state;
+        if (mediaStream!=null)
+        {
+            mediaStream.audioTracks.get(0).setEnabled(state);
+        }
+
+    }
+
+    public void changeRemoteAudioSwitch(boolean state)
+    {
+        remoteAudioState=state;
+
+        MediaStream mediaStream =pcObserver.getRemoteMediaStream();
+        if (mediaStream!=null)
+        {
+            mediaStream.audioTracks.get(0).setEnabled(state);
+        }
+    }
 
     /**
      * 暂停视频画面

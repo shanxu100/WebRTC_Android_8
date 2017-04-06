@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:padding="15dp"
+        android:text="本地音效控制"
+        android:textSize="20dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/top_rl"
+        android:layout_marginBottom="10dp"
+        android:background="@color/lightgrey" />
+
+    <Switch
+        android:id="@+id/Microphone_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:text="发送 音频" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/top_rl"
+        android:layout_marginBottom="10dp"
+        android:background="@color/lightgrey" />
+
+    <Switch
+        android:id="@+id/Speaker_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:text="接收 音频" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/top_rl"
+        android:layout_marginBottom="10dp"
+        android:background="@color/lightgrey" />
+
+    <Button
+        android:id="@+id/AcceptAudio_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/blueroundcorner_bkgrd"
+        android:text="确定" />
+
+</LinearLayout>
