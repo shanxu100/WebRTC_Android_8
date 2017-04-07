@@ -8,6 +8,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -26,6 +27,7 @@ import com.example.guan.webrtc_android_8.common.JsonHelper;
 import com.example.guan.webrtc_android_8.common.VideoAudioHelper;
 import com.example.guan.webrtc_android_8.common.WebSocketClient;
 import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
+import com.example.guan.webrtc_android_8.utils.ClickUtil;
 import com.example.guan.webrtc_android_8.view.AudioControlDialog;
 import com.example.guan.webrtc_android_8.view.YesOrNoDialog;
 
@@ -1269,5 +1271,17 @@ public class CallActivity extends AppCompatActivity {
         });
     }
 
-
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Toast.makeText(mContext, "再按一次退出视频通话", Toast.LENGTH_SHORT).show();
+            if (ClickUtil.isFastDoubleClick()) {
+                //主动模拟人的点击动作
+                cancel_btn.performClick();
+            }
+            return true;
+        } else {
+            return super.onKeyDown(keyCode, event);
+        }
+    }
 }
