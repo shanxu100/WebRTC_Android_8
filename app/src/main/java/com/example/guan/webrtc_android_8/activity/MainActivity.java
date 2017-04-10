@@ -30,10 +30,15 @@ import com.example.guan.webrtc_android_8.view.ModeSettingDialog;
 import com.example.guan.webrtc_android_8.view.ServerSettingDialog;
 import com.example.guan.webrtc_android_8.view.YesOrNoDialog;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 
 public class MainActivity extends AppCompatActivity {
 
     String TAG = AppRTC_Common.TAG_COMM + "MainActivity";
+
+    ArrayList<String> permissionList = new ArrayList<String>();
 
 
     Button startCall_btn;
@@ -55,12 +60,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initData();
         initUI();
-        initPermission();
+        checkAndRequestPermissions(permissionList);
     }
 
     private void initData() {
         mContext = this;
         saveScreenSize();
+        permissionList.add(Manifest.permission.CAMERA);
+        permissionList.add(Manifest.permission.RECORD_AUDIO);
+        permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
     }
 
     private void initUI() {
@@ -190,56 +198,24 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void initPermission() {
-        //Can reqeust only one set of permissions at a time
 
-        int hasCameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        int hasRecordAudioPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
-        int hasStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    private void checkAndRequestPermissions(ArrayList<String> permissionList) {
 
-        ynDialog = new YesOrNoDialog(mContext);
-        ynDialog.setMeesage("请授予相关权限，否则程序无法运行。\n\n点击确定，重新授予权限。\n点击取消，立即终止程序。\n");
-        ynDialog.setCallback(new YesOrNoDialog.YesOrNoDialogCallback() {
-            @Override
-            public void onClickButton(YesOrNoDialog.ClickedButton button, String message) {
-                if (button == YesOrNoDialog.ClickedButton.POSITIVE) {
-                    ynDialog.dismiss();
-                    //此处需要弹出手动修改权限的系统界面
-                    MainActivity.this.finish();
-                } else if (button == YesOrNoDialog.ClickedButton.NEGATIVE) {
-                    ynDialog.dismiss();
-                    MainActivity.this.finish();
-                }
-            }
-        });
-
-        if (hasCameraPermission != PackageManager.PERMISSION_GRANTED ||
-                hasRecordAudioPermission != PackageManager.PERMISSION_GRANTED ||
-                hasStoragePermission != PackageManager.PERMISSION_GRANTED) {
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO) ||
-                    ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                // Show an expanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-                //对于原生Android，如果用户选择了“不再提示”，那么shouldShowRequestPermissionRationale就会为true。
-                //此时，用户可以弹出一个对话框，向用户解释为什么需要这项权限。
-                //对于一些深度定制的系统，如果用户选择了“不再提示”，那么shouldShowRequestPermissionRationale永远为false
-                ynDialog.show();
-            } else {
-
-                // No explanation needed, we can request the permission.
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA,
-                                Manifest.permission.RECORD_AUDIO,
-                                Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        AppConstant.MY_PERMISSIONS_REQUEST);
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
+        ArrayList<String> list = new ArrayList<>(permissionList);
+        Iterator<String> it = list.iterator();
+        while (it.hasNext()) {
+            String permission = it.next();
+            int hasPermission = ContextCompat.checkSelfPermission(this, permission);
+            if (hasPermission == PackageManager.PERMISSION_GRANTED) {
+                it.remove();
             }
         }
+
+        if (list.size() == 0) {
+            return;
+        }
+        String[] permissions = list.toArray(new String[0]);
+        ActivityCompat.requestPermissions(this, permissions, AppConstant.MY_PERMISSIONS_REQUEST);
 
     }
 
@@ -260,18 +236,40 @@ public class MainActivity extends AppCompatActivity {
             case AppConstant.MY_PERMISSIONS_REQUEST: {
                 // If request is cancelled, the result arrays are empty.
                 int length = grantResults.length;
+                boolean re_request = false;
                 for (int i = 0; i < length; i++) {
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "权限授予成功:" + permissions[i]);
                     } else {
                         Log.e(TAG, "权限授予失败:" + permissions[i]);
-                        ynDialog.show();
+                        re_request = true;
                     }
+                }
+                if (re_request) {
+                    //弹出对话框，提示用户重新授予权限
+                    final YesOrNoDialog permissionDialog = new YesOrNoDialog(mContext);
+                    permissionDialog.setCanceledOnTouchOutside(false);
+                    permissionDialog.setMeesage("请授予相关权限，否则程序无法运行。\n\n点击确定，重新授予权限。\n点击取消，立即终止程序。\n");
+                    permissionDialog.setCallback(new YesOrNoDialog.YesOrNoDialogCallback() {
+                        @Override
+                        public void onClickButton(YesOrNoDialog.ClickedButton button, String message) {
+                            if (button == YesOrNoDialog.ClickedButton.POSITIVE) {
+                                permissionDialog.dismiss();
+                                //此处需要弹出手动修改权限的系统界面
+                                checkAndRequestPermissions(permissionList);
+                            } else if (button == YesOrNoDialog.ClickedButton.NEGATIVE) {
+                                permissionDialog.dismiss();
+                                MainActivity.this.finish();
+                            }
+                        }
+                    });
+
+                    permissionDialog.show();
                 }
                 break;
             }
-
-
+            default:
+                break;
         }
     }
 
@@ -280,6 +278,6 @@ public class MainActivity extends AppCompatActivity {
         //super.onActivityResult(requestCode, resultCode, data);
         //根据requestCode，resultCode判断后，再进行操作。此处省略
         roomid_et.getText().clear();
-        Log.e(TAG,"MainActivity finished successfully");
+        Log.e(TAG, "MainActivity finished successfully");
     }
 }

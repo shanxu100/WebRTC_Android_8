@@ -16,21 +16,26 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-        <activity android:name=".activity.MainActivity"
+        <activity
+            android:name=".activity.MainActivity"
             android:windowSoftInputMode="stateHidden|stateAlwaysHidden">
-            <!-- 不自动弹出软件盘-->
+
+            <!-- 不自动弹出软件盘 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.CallActivity"
-            android:windowSoftInputMode="stateHidden|stateAlwaysHidden"
+        <activity
+            android:name=".activity.CallActivity"
             android:screenOrientation="portrait"
-            >
-            <!-- 不自动弹出软件盘-->
-            <!--固定屏幕方向-->
+            android:windowSoftInputMode="stateHidden|stateAlwaysHidden">
+
+            <!-- 不自动弹出软件盘 -->
+            <!-- 固定屏幕方向 -->
         </activity>
+        <activity android:name=".activity.TestActivity"></activity>
     </application>
 
 </manifest>

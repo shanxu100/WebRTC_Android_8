@@ -75,7 +75,7 @@ public class JsonHelper {
             Log.e(TAG, "roomHttpResponseParse: " + roomJson.toString());
             String result = roomJson.getString("result");
             //=================
-            if (result.equals("ROOM_FULL")) {
+            if (result.equals("FULL")) {
                 Log.e(TAG, "ROOM_FULL");
                 AppRTC_Common.SignalingParameters params = new AppRTC_Common.SignalingParameters(result,
                         null, false, null, null, null, null, null, null, null);

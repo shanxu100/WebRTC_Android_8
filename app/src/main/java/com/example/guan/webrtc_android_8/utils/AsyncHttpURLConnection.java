@@ -44,7 +44,7 @@ public class AsyncHttpURLConnection {
     private String contentType;
 
 
-    private String TAG = AppRTC_Common.TAG_COMM+"AsyncHttp";
+    private String TAG = AppRTC_Common.TAG_COMM + "AsyncHttp";
 
     /**
      * 定义回调的接口
@@ -63,6 +63,7 @@ public class AsyncHttpURLConnection {
 
     /**
      * 构造函数
+     *
      * @param method
      * @param url
      * @param message
@@ -109,6 +110,11 @@ public class AsyncHttpURLConnection {
             connection.setReadTimeout(HTTP_TIMEOUT_MS);
             // TODO(glaznev) - query request origin from pref_room_server_url_key preferences.
             connection.addRequestProperty("origin", HTTP_ORIGIN);
+            /**
+             * 为了防止CSRF的攻击，我们建议修改浏览器在发送POST请求的时候加上一个Origin字段.
+             * 这个Origin字段主要是用来标识出最初请求是从哪里发起的。
+             * 如果浏览器不能确定源在哪里，那么在发送的请求里面Origin字段的值就为空。
+             */
             boolean doOutput = false;
             if (method.equals("POST")) {
                 doOutput = true;
@@ -162,15 +168,16 @@ public class AsyncHttpURLConnection {
      * 忽略安全证书
      */
     private static void disableSslVerification() {
-        try
-        {
+        try {
             // Create a trust manager that does not validate certificate chains
-            TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
                 public X509Certificate[] getAcceptedIssuers() {
                     return null;
                 }
+
                 public void checkClientTrusted(X509Certificate[] certs, String authType) {
                 }
+
                 public void checkServerTrusted(X509Certificate[] certs, String authType) {
                 }
             }
