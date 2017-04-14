@@ -48,14 +48,22 @@ public class ServerSettingDialog extends Dialog {
         selectserver_radiogrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch (checkedId) {
-                    case R.id.labserver_radiobtn:
-                        callback.onClickRadioButton(SelectedServer.Lab);
-                        break;
-                    case R.id.aliyunserver_radiobtn:
-                        callback.onClickRadioButton(SelectedServer.Aliyun);
-                        break;
+                if (checkedId==R.id.labserver_radiobtn)
+                {
+                    callback.onClickRadioButton(SelectedServer.Lab);
+                }else if (checkedId==R.id.aliyunserver_radiobtn)
+                {
+                    callback.onClickRadioButton(SelectedServer.Aliyun);
                 }
+
+//                switch (checkedId) {
+//                    case R.id.labserver_radiobtn:
+//                        callback.onClickRadioButton(SelectedServer.Lab);
+//                        break;
+//                    case R.id.aliyunserver_radiobtn:
+//                        callback.onClickRadioButton(SelectedServer.Aliyun);
+//                        break;
+//                }
                 ServerSettingDialog.this.dismiss();
             }
         });

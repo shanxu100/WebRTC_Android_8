@@ -46,14 +46,24 @@ public class ModeSettingDialog extends Dialog {
         modesetting_radiogrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch (checkedId) {
-                    case R.id.p_2_m_radiobtn:
-                        callback.onClickRadioButton(Mode.P_2_M);
-                        break;
-                    case R.id.m_2_m_radiobtn:
-                        callback.onClickRadioButton(Mode.M_2_M);
-                        break;
+
+                if (checkedId==R.id.p_2_m_radiobtn)
+                {
+                    callback.onClickRadioButton(Mode.P_2_M);
+
+                }else if (checkedId==R.id.m_2_m_radiobtn)
+                {
+                    callback.onClickRadioButton(Mode.M_2_M);
+
                 }
+//                switch (checkedId) {
+//                    case R.id.p_2_m_radiobtn:
+//                        callback.onClickRadioButton(Mode.P_2_M);
+//                        break;
+//                    case R.id.m_2_m_radiobtn:
+//                        callback.onClickRadioButton(Mode.M_2_M);
+//                        break;
+//                }
                 ModeSettingDialog.this.dismiss();
             }
         });

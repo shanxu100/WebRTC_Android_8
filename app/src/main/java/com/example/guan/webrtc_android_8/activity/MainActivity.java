@@ -89,14 +89,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
 
-                switch (checkedId) {
-                    case R.id.Master_radiobtn:
-                        role = AppRTC_Common.RoomRole.MASTER;
-                        break;
-                    case R.id.Slave_radiobtn:
-                        role = AppRTC_Common.RoomRole.SLAVE;
-                        break;
+                if (checkedId==R.id.Master_radiobtn)
+                {
+                    role = AppRTC_Common.RoomRole.MASTER;
+
+                }else if(checkedId==R.id.Slave_radiobtn){
+                    role = AppRTC_Common.RoomRole.SLAVE;
+
                 }
+
+//                switch (checkedId) {
+//                    case R.id.Master_radiobtn:
+//                        break;
+//                    case R.id.Slave_radiobtn:
+//                        break;
+//                }
             }
         });
 
