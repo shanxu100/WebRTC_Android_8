@@ -12,7 +12,9 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_weight="1"
-        android:gravity="right|bottom">
+        android:gravity="right|bottom"
+        android:visibility="invisible">
+
         <ImageButton
             android:id="@+id/selectmode_imgbtn"
             android:layout_width="wrap_content"
@@ -22,6 +24,7 @@
             android:background="@color/lightgrey"
             android:paddingRight="30dp"
             />
+
         <TextView
             android:id="@+id/modesetting_tv"
             android:layout_width="150dp"
@@ -103,6 +106,52 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="15dp">
+
+        <Button
+            android:id="@+id/TestNum1_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:text="房间1"
+            android:hint="030181"
+            android:background="@drawable/blueroundcorner_bkgrd"
+            />
+        <Button
+            android:id="@+id/TestNum2_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:text="房间2"
+            android:hint="747299"
+            android:background="@drawable/blueroundcorner_bkgrd"
+            />
+        <Button
+            android:id="@+id/TestNum3_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:text="房间3"
+            android:hint="335000"
+            android:background="@drawable/blueroundcorner_bkgrd"
+            />
+
+
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="10"
         android:gravity="center_horizontal"
@@ -138,38 +187,85 @@
 
         </RadioGroup>
 
+
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="right">
 
+
+
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="15dp">
+            <Button
+                android:id="@+id/ClearRoom_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_weight="1"
+                android:text="清空测试房间"
+                android:layout_alignParentLeft="true"
+                android:background="@color/transparent"
+                />
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@color/black" />
+            <Button
+                android:id="@+id/TestServer_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_weight="1"
+                android:text="测试服务器"
+                android:layout_alignParentLeft="true"
+                android:background="@color/transparent"
+                />
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:background="@color/black" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_weight="1"
+                >
 
                 <Button
                     android:id="@+id/serversetting_btn"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:background="@drawable/setting" />
-
-
-                <TextView
-                    android:id="@+id/serversetting_tv"
-                    android:layout_width="150dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_horizontal"
-                    android:text="请选择服务器"
-                    android:textSize="10dp"
-                    android:layout_marginTop="15dp"/>
+                    android:text="选择服务器"
+                    android:background="@color/transparent" />
+
+
+
             </LinearLayout>
 
-        </RelativeLayout>
-
-
+        </LinearLayout>
+        <TextView
+            android:id="@+id/serversetting_tv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:gravity="right"
+            android:text="请选择服务器"
+            android:textSize="10dp"
+            android:layout_marginBottom="10dp"/>
     </LinearLayout>
 
 

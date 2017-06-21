@@ -62,6 +62,9 @@ public class AppRTC_Common {
     public static String selected_WebRTC_URL = aliyun_WebRTC_URL;
     public static String selected_turnServer_URL = aliyun_turnServer_URL;
 
+    //置空测试房间
+    public static final String ClearRoom_URL="https://i-test.com.cn/clear";
+
     //模式设置选项
     public static final String P_2_M="Point to Multipoint";
     public static final String M_2_M="Multipoint to Multipoint";

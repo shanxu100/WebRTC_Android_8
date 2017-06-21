@@ -25,7 +25,9 @@ import android.widget.Toast;
 import com.example.guan.webrtc_android_8.R;
 import com.example.guan.webrtc_android_8.common.AppConstant;
 import com.example.guan.webrtc_android_8.common.AppRTC_Common;
+import com.example.guan.webrtc_android_8.utils.AsyncHttpURLConnection;
 import com.example.guan.webrtc_android_8.utils.ClickUtil;
+import com.example.guan.webrtc_android_8.utils.ShowUtil;
 import com.example.guan.webrtc_android_8.view.ModeSettingDialog;
 import com.example.guan.webrtc_android_8.view.ServerSettingDialog;
 import com.example.guan.webrtc_android_8.view.YesOrNoDialog;
@@ -52,7 +54,13 @@ public class MainActivity extends AppCompatActivity {
     String roomid;
     Context mContext;
 
-    YesOrNoDialog ynDialog;
+    Button TestNum1_btn;
+    Button TestNum2_btn;
+    Button TestNum3_btn;
+    Button ClearRoom_btn;
+
+    View.OnClickListener TestNum_listener;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +77,14 @@ public class MainActivity extends AppCompatActivity {
         permissionList.add(Manifest.permission.CAMERA);
         permissionList.add(Manifest.permission.RECORD_AUDIO);
         permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        TestNum_listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                roomid_et.setText(((Button) v).getHint());
+                startCall_btn.performClick();
+            }
+        };
     }
 
     private void initUI() {
@@ -84,26 +100,25 @@ public class MainActivity extends AppCompatActivity {
         modeSetting_imgbtn = (ImageButton) this.findViewById(R.id.selectmode_imgbtn);
         selectedMode_tv = (TextView) this.findViewById(R.id.modesetting_tv);
 
+        TestNum1_btn = (Button) this.findViewById(R.id.TestNum1_btn);
+        TestNum2_btn = (Button) this.findViewById(R.id.TestNum2_btn);
+        TestNum3_btn = (Button) this.findViewById(R.id.TestNum3_btn);
+
+        ClearRoom_btn = (Button) this.findViewById(R.id.ClearRoom_btn);
+
 
         role_radiogrp.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
 
-                if (checkedId==R.id.Master_radiobtn)
-                {
+                if (checkedId == R.id.Master_radiobtn) {
                     role = AppRTC_Common.RoomRole.MASTER;
 
-                }else if(checkedId==R.id.Slave_radiobtn){
+                } else if (checkedId == R.id.Slave_radiobtn) {
                     role = AppRTC_Common.RoomRole.SLAVE;
 
                 }
 
-//                switch (checkedId) {
-//                    case R.id.Master_radiobtn:
-//                        break;
-//                    case R.id.Slave_radiobtn:
-//                        break;
-//                }
             }
         });
 
@@ -144,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
         serverSetting_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -175,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
         selectedServer_tv.setText(AppRTC_Common.selected_WebRTC_URL);
 
 
+
         modeSetting_imgbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -201,6 +218,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         selectedMode_tv.setText(AppRTC_Common.selectedMode);
+
+        TestNum1_btn.setOnClickListener(TestNum_listener);
+        TestNum2_btn.setOnClickListener(TestNum_listener);
+        TestNum3_btn.setOnClickListener(TestNum_listener);
 
 
     }
